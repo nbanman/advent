@@ -1,6 +1,6 @@
 # advent
 
-Ross MacArthur's Advent of Code run environment. He shared his runner but I'm new to Rust and had 
+This is a 12/1/2023 fork of [Ross MacArthur's Advent of Code run environment](https://github.com/rossmacarthur/advent/). He shared his runner but I'm new to Rust and had 
 trouble extricating the library tool. So I just cloned the entire repo and will be using it as the
 basis for my solutions. All solutions prior to 2023 are his, maybe I will delete them or do 
 something with them later.

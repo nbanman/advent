@@ -44,6 +44,6 @@ zoneight234
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input), 55130);
-    assert_eq!(part2(input), 54985);
+    assert_eq!(part1(input), 54388);
+    assert_eq!(part2(input), 53515);
 }
