@@ -44,7 +44,8 @@ fn part2(calibration: &str) -> u32 {
                 .get(0)
                 .unwrap()
                 .as_str();
-            str_to_u32(first) * 10 + str_to_u32(second);
+            
+            str_to_u32(first) * 10 + str_to_u32(second)
         }).sum()
 }
 
