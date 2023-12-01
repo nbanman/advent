@@ -12,12 +12,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.ADVENT_INPUT_GITHUB_TOKEN }}
-        repository: rossmacarthur/advent-input
-        path: input
-
     - name: Setup Rust
       run: rustup show
 
