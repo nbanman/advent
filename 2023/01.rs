@@ -4,8 +4,8 @@ fn default_input() -> &'static str {
     include_input!(2023 / 01)
 }
 
-fn part1(calibration: &str) -> u32 {
-    calibration
+fn calibrate(input: &str) -> u32 {
+    input
         .lines()
         .map(|line| {
             let first = line
@@ -24,44 +24,30 @@ fn part1(calibration: &str) -> u32 {
         }).sum()
 }
 
-fn part2(calibration: &str) -> u32 {
-    let pattern = regex!(r"(\d|one|two|three|four|five|six|seven|eight|nine)");
-    let reverse_pattern = regex!(r"(\d|eno|owt|eerht|ruof|evif|xis|neves|thgie|enin)");
-    calibration
-        .lines()
-        .map(|line| {
-            let first = pattern
-                .captures(line)
-                .unwrap()
-                .get(0)
-                .unwrap()
-                .as_str();
-            let reversed_line = line.chars().rev().collect::<String>();
-            
-            let second = reverse_pattern
-                .captures(&reversed_line)
-                .unwrap()
-                .get(0)
-                .unwrap()
-                .as_str();
-            
-            str_to_u32(first) * 10 + str_to_u32(second)
-        }).sum()
+fn part1(input: &str) -> u32 {
+    calibrate(input)
 }
 
-fn str_to_u32(s: &str) -> u32 {
-    match s {
-        "one" | "eno" => 1,
-        "two" | "owt" => 2,
-        "three" | "eerht" => 3,
-        "four" | "ruof" => 4,
-        "five" | "evif" => 5,
-        "six" | "xis" => 6,
-        "seven" | "neves" => 7,
-        "eight" | "thgie" => 8,
-        "nine" | "enin" => 9,
-        _ => s.chars().next().unwrap().to_digit(10).unwrap(),
-    }
+fn part2(input: &str) -> u32 {
+    let replacements = &[
+        ["one", "o1e"],
+        ["two", "t2o"],
+        ["three", "t3e"],
+        ["four", "4"],
+        ["five", "5e"],
+        ["six", "6"],
+        ["seven", "7n"],
+        ["eight", "e8t"],
+        ["nine", "n9e"],
+    ];
+
+    let replaced_input = replacements
+        .iter()
+        .fold(input.to_string(), |acc, [original, replacement]| {
+            acc.replace(original, &replacement)
+        });
+
+    calibrate(&replaced_input)
 }
 
 fn main() {
