@@ -37,7 +37,6 @@ fn part2(calibration: &str) -> u32 {
                 .unwrap()
                 .as_str();
             let reversed_line = line.chars().rev().collect::<String>();
-            // println!("{}", reversed_line);
             
             let second = reverse_pattern
                 .captures(&reversed_line)
@@ -45,9 +44,7 @@ fn part2(calibration: &str) -> u32 {
                 .get(0)
                 .unwrap()
                 .as_str();
-            let value = str_to_u32(first) * 10 + str_to_u32(second);
-            println!("line: {}, first: {}, second: {}, value: {}", line, first, second, value);
-            value
+            str_to_u32(first) * 10 + str_to_u32(second);
         }).sum()
 }
 
