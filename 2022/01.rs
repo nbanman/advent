@@ -1,36 +1,40 @@
 use advent::prelude::*;
 
-fn parse_input(input: &str) -> Vec<Vec<i64>> {
-    input
-        .split("\n\n")
-        .map(|elf| elf.lines().map(str::parse).map(Result::unwrap).collect())
-        .collect()
+fn parse_input(input: &str) -> Vec<u32> {
+    let mut elves = Vec::new();
+    let mut sum = 0;
+
+    for line in input.lines() {
+        match line.parse::<u32>() {
+            Ok(n) => sum += n,
+            Err(_) => {
+                elves.push(sum);
+                sum = 0;
+            }
+        }
+    }
+    elves.push(sum);
+    elves.sort_by(|a, b| b.cmp(a));
+    elves
 }
 
-fn default_input() -> Vec<Vec<i64>> {
+fn default_input() -> Vec<u32> {
     parse_input(include_input!(2022 / 01))
 }
 
-fn part1(input: Vec<Vec<i64>>) -> i64 {
-    input
-        .into_iter()
-        .map(|elf| elf.into_iter().sum::<i64>())
-        .max()
-        .unwrap()
+fn part1(input: Vec<u32>) -> u32 {
+    input[0]
 }
 
-fn part2(input: Vec<Vec<i64>>) -> i64 {
-    input
-        .into_iter()
-        .map(|elf| elf.into_iter().sum::<i64>())
-        .sorted_unstable()
-        .rev()
-        .take(3)
-        .sum()
+fn part2(input: Vec<u32>) -> u32 {
+    input[0..3].iter().sum()
 }
 
 fn main() {
-    let solution = advent::new(default_input).part(part1).part(part2).build();
+    let solution = advent::new(default_input)
+        .part(part1)
+        .part(part2)
+        .build();
     solution.cli()
 }
 
@@ -59,6 +63,6 @@ fn example() {
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone()), 68787);
-    assert_eq!(part2(input), 198041);
+    assert_eq!(part1(input.clone()), 71300);
+    assert_eq!(part2(input), 209691);
 }
