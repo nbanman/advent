@@ -21,7 +21,8 @@ fn calibrate(input: &str) -> u32 {
                 .to_digit(10)
                 .unwrap();
             first * 10 + second
-        }).sum()
+        })
+        .sum()
 }
 
 fn part1(input: &str) -> u32 {
