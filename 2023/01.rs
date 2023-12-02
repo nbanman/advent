@@ -29,7 +29,7 @@ fn part1(input: &str) -> u32 {
 }
 
 fn part2(input: &str) -> u32 {
-    let replacements = &[
+    let replacements = [
         ["one", "o1e"],
         ["two", "t2o"],
         ["three", "t3e"],
