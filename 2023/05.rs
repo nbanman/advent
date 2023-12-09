@@ -2,29 +2,29 @@ use advent::prelude::*;
 
 #[derive(Clone, Copy, Debug)]
 struct Listing {
-    source_start: u64,
-    offset: u64,
-    len: u64,
+    source_start: i64,
+    offset: i64,
+    len: i64,
 }
 
 impl Listing {
-    fn source_end(&self) -> u64 {
+    fn source_end(&self) -> i64 {
         self.source_start + self.len - 1
     }
 }
 
-fn default_input() -> (Vec<u64>, Vec<Vec<Listing>>) {
+fn default_input() -> (Vec<i64>, Vec<Vec<Listing>>) {
     parse_input(include_input!(2023 / 05))
 }
 
-fn parse_input(input: &str) -> (Vec<u64>, Vec<Vec<Listing>>) {
-    let stanzas: Vec<Vec<u64>> = input.split("\n\n")
+fn parse_input(input: &str) -> (Vec<i64>, Vec<Vec<Listing>>) {
+    let stanzas: Vec<Vec<i64>> = input.split("\n\n")
         .map(|stanza| {
             let number_strings: String = stanza.chars()
                 .filter(|c| c.is_ascii_digit() || c.is_whitespace())
                 .collect();
             number_strings.split_whitespace()
-                .map(|number_string| number_string.parse::<u64>().unwrap())
+                .map(|number_string| number_string.parse::<i64>().unwrap())
                 .collect()
         }).collect();
 
@@ -32,11 +32,17 @@ fn parse_input(input: &str) -> (Vec<u64>, Vec<Vec<Listing>>) {
     let conversions = stanzas[1..].iter()
         .map(|map_numbers| {
             map_numbers.chunks(3)
-                .map(|chunk| {
-                    Listing {
-                        source_start: chunk[0],
-                        offset: chunk[0] - chunk[1],
-                        len: chunk[2]
+                .filter_map(|chunk| {
+                    if let [destination_start, source_start, length] = chunk {
+                        Some(
+                            Listing {
+                                source_start: *source_start,
+                                offset: destination_start - source_start,
+                                len: *length,
+                            }
+                        )
+                    } else {
+                        None
                     }
                 })
                 .sorted_by_key(|listing| listing.source_start)
@@ -46,48 +52,57 @@ fn parse_input(input: &str) -> (Vec<u64>, Vec<Vec<Listing>>) {
     (seeds.to_owned(), conversions)
 }
 
-fn solve(conversions: &[Vec<Listing>], seed_ranges: Vec<(u64, u64)>) -> u64 {
-    seed_ranges.iter().map(|seed_range| {
-        println!("{:?}", seed_range);
-        let sub_ranges = conversions
-            .iter()
-            .fold(vec![*seed_range], |ranges, listings| {
-                println!("ranges: {:?}", ranges);
-                let internal = ranges.iter().flat_map(|(start, end)| {
-                    let mut sub_sub_ranges: Vec<(u64, u64)> = Vec::new();
-                    let last = listings.iter().fold(*start, |next, listing| {
-                        if end >= &listing.source_start && next <= listing.source_end() {
-                            if next < listing.source_start {
-                                sub_sub_ranges.push((next, listing.source_start));
+fn solve(conversions: &[Vec<Listing>], seed_ranges: Vec<(i64, i64)>) -> i64 {
+    seed_ranges.iter()
+        .map(|seed_range| {
+            let sub_ranges: Vec<(i64, i64)> = conversions.iter()
+                .fold(vec![seed_range.to_owned()], |ranges, listings| {
+                    let test: Vec<(i64, i64)> = ranges.iter().flat_map(|range| {
+                        let mut sub_ranges: Vec<(i64, i64)> = Vec::new();
+                        let (range_first, range_last) = range;
+                        let last = listings.iter().fold(*range_first, |next, listing| {
+                            if range_last >= &listing.source_start && &next <= &listing.source_end() {
+                                if next < listing.source_start {
+                                    sub_ranges.push((next.to_owned(), listing.source_start - 1));
+                                }
+                                let se = listing.source_end();
+                                let map_end = min(range_last, &se);
+                                sub_ranges.push((next + listing.offset, map_end + listing.offset));
+                                *map_end + 1
+                            } else {
+                                next
                             }
-                            let map_end = min(*end, listing.source_end());
-                            map_end + 1
-                        } else {
-                            next
+                        });
+                        if &last <= range_last {
+                            sub_ranges.push((last.to_owned(), range_last.to_owned()));
                         }
-                    });
-                    if last <= *end {
-                        sub_sub_ranges.push((last, *end));
-                    }
-                    println!("Sub-sub-ranges: {:?}", sub_sub_ranges);
-                    sub_sub_ranges
-                }).collect::<Vec<(u64, u64)>>();
-                println!("Internal: {:?}", internal);
-                internal
-            });
-        let test = sub_ranges.iter().map(|(first, _)| first).min().unwrap();
-        *test
-    })
-    .min().unwrap().to_owned()
+                        sub_ranges
+                    }).collect();
+                    test
+                });
+
+            sub_ranges.iter().map(|(first, _)| first.to_owned()).min().unwrap()
+        })
+        .min()
+        .unwrap()
 }
 
-fn part1((seeds, conversions): (Vec<u64>, Vec<Vec<Listing>>)) -> u64 {
-    let seed_ranges: Vec<(u64, u64)> = seeds.iter().map(|seed| (*seed, *seed)).collect();
+fn part1((seeds, conversions): (Vec<i64>, Vec<Vec<Listing>>)) -> i64 {
+    let seed_ranges: Vec<(i64, i64)> = seeds.iter().map(|seed| (*seed, *seed)).collect();
     solve(&conversions, seed_ranges)
 }
 
-fn part2((seeds, conversions): (Vec<u64>, Vec<Vec<Listing>>)) -> u64 {
-    todo!("part 2")
+fn part2((seeds, conversions): (Vec<i64>, Vec<Vec<Listing>>)) -> i64 {
+    let seed_ranges: Vec<(i64, i64)> = seeds.chunks(2)
+        .filter_map(|chunk| {
+            if let [start, length] = chunk {
+                Some((*start, start + length - 1))
+            } else {
+                None
+            }
+        })
+        .collect();
+    solve(&conversions, seed_ranges)
 }
 
 fn main() {
@@ -131,7 +146,7 @@ humidity-to-location map:
 60 56 37
 56 93 4";
     assert_eq!(part1(parse_input(input)), 35);
-    // assert_eq!(part2(parse_input(input)), 46);
+    assert_eq!(part2(parse_input(input)), 46);
 }
 
 #[test]
