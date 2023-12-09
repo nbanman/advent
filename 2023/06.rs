@@ -8,8 +8,6 @@ fn solve<F>(input: &str, parse_line: F) -> i64
 where 
     F: Fn(&str) -> Vec<i64>
 {
-    let mut lines = input.lines();
-
     let races: Vec<Vec<i64>> = input
         .lines()
         .map(parse_line)
