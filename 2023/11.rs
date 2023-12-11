@@ -58,7 +58,7 @@ fn distance(
     galaxies.iter().enumerate()
         .map(|(i, (a_pos, a_count))| {
             let already_passed = expansions.binary_search(a_pos).err().unwrap();
-            galaxies.iter().dropping(i + 1)
+            galaxies.iter().skip(i + 1)
                 .map(|(b_pos, b_count)| {
                     let expansions_passed = expansions.binary_search(b_pos).err().unwrap()
                         - already_passed;
