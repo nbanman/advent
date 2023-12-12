@@ -23,8 +23,6 @@ fn parse_input(data: &str) -> Image {
         })
         .filter(|(_, count)| *count > 0)
         .collect();
-
-    // for each axis, track the indices representing expansion fields
     let y_galaxies: Vec<(usize, usize)> = (0..height).into_iter()
         .map(|y| {
             let count = &data[y * width .. y * width + width].chars()
@@ -35,6 +33,7 @@ fn parse_input(data: &str) -> Image {
         .filter(|(_, count)| *count > 0)
         .collect();
 
+    // for each axis, track the indices representing expansion fields
     let x_expansion: Vec<usize> = (0..width - 1).into_iter()
         .filter(|x| {
             (0..height).into_iter().all(|y| data.chars().nth(*x + y * width).unwrap() == '.')
