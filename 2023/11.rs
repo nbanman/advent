@@ -116,6 +116,7 @@ fn example1() {
 #...#.....
 ";
     assert_eq!(part1(parse_input(input)), 374);
+    assert_eq!(part2(parse_input(input)), 82000210);
 }
 #[test]
 fn default() {
