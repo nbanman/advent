@@ -1,7 +1,5 @@
 use advent::prelude::*;
 
-// Somehow 3x slower than Kotlin version!
-
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 enum Direction {
     N,
@@ -25,9 +23,9 @@ fn get_pipe(field: &str) -> Vec<Direction> {
     // start at 'S'
     let start_pos = field.find('S').unwrap();
 
-    let start_dir = if "7|F".contains(field.chars().nth(move_along_pipe(&start_pos, &Direction::N, &field_width)).unwrap()) {
+    let start_dir = if "7|F".contains(field.as_bytes()[move_along_pipe(&start_pos, &Direction::N, &field_width)] as char) {
         Direction::N
-    } else if "7-J".contains(field.chars().nth(move_along_pipe(&start_pos, &Direction::E, &field_width)).unwrap()) {
+    } else if "7-J".contains(field.as_bytes()[move_along_pipe(&start_pos, &Direction::E, &field_width)] as char) {
         Direction::E
     } else {
         Direction::S
@@ -36,7 +34,7 @@ fn get_pipe(field: &str) -> Vec<Direction> {
     let move_direction = |(pos, dir): (usize, &Direction)| {
         let next_pos: usize = move_along_pipe(&pos, dir, &field_width);
         let neighbor_dir = direction_map
-            .get(&(field.chars().nth(next_pos).unwrap(), dir.clone()))
+            .get(&(field.as_bytes()[next_pos] as char, dir.clone()))
             .unwrap();
         (next_pos, neighbor_dir)
     };
@@ -47,9 +45,7 @@ fn get_pipe(field: &str) -> Vec<Direction> {
     let mut direction = start_dir.clone();
     loop {
         let (new_pos, new_dir) = move_direction((pos, &direction));
-        if let Some(x) = field.chars().nth(new_pos) {
-            if x == 'S' { break };
-        }
+        if field.as_bytes()[new_pos] as char == 'S' { break };
         pos = new_pos;
         direction = new_dir.clone();
         directions.push(direction);
