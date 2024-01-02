@@ -39,38 +39,38 @@ impl SpringRow {
             // Otherwise, we go recursive by trying to fit the fulfillment in every place along the block
             // This starts as a sequence of indexes, from 0 until the length of the block minus the fulfillment size
             // (to account for the size of the fulfillment itself in the string).
-            let value = (0 ..=block.len() as isize - fulfillment as isize)
-                .take_while(|index| {
-                    let index = *index as usize;
-                    let predicate = index == 0 || block.as_bytes()[index - 1] as char != '#';
-                    predicate
-                })
-                .filter(|index| {
-                    let index = *index as usize;
-                    // filter out invalid placements, in cascading fashion
-                    // if the placement includes a '.', invalid b/c '.' means not broken
-                    // if the placement has no part of the string after it, valid b/c nothing else to consider
-                    // if the character following the placement is '#', invalid b/c that extra '#' would overfulfill
-                    // otherwise valid
-                    if let Some(_) = &block[index..index + fulfillment].find('.') {
-                        false
-                    } else if index + fulfillment == block.len() {
-                        true
-                    } else if block.as_bytes()[index + fulfillment] == '#' as u8 {
-                        false
-                    } else {
-                        true
-                    }
-                })
-                .map(|index| {
-                    let new_state = State {
-                        conditions_index: s.conditions_index + index as usize + fulfillment + 1,
-                        damage_index: s.damage_index + 1
-                    };
-                    self.arrangements(new_state)
-                })
-                .sum();
+            let value = if block.len() >= fulfillment {
+                (0 ..=block.len() - fulfillment)
+                    .take_while(|index| { *index == 0 || block.as_bytes()[index - 1] as char != '#' })
+                    .filter(|index| {
+                        // filter out invalid placements, in cascading fashion
+                        // if the placement includes a '.', invalid b/c '.' means not broken
+                        // if the placement has no part of the string after it, valid b/c nothing else to consider
+                        // if the character following the placement is '#', invalid b/c that extra '#' would overfulfill
+                        // otherwise valid
+                        if let Some(_) = &block[*index..index + fulfillment].find('.') {
+                            false
+                        } else if index + fulfillment == block.len() {
+                            true
+                        } else if block.as_bytes()[index + fulfillment] == '#' as u8 {
+                            false
+                        } else {
+                            true
+                        }
+                    })
+                    .map(|index| {
+                        let new_state = State {
+                            conditions_index: s.conditions_index + index + fulfillment + 1,
+                            damage_index: s.damage_index + 1
+                        };
+                        self.arrangements(new_state)
+                    })
+                    .sum()
 
+
+            } else {
+                0
+            };
             self.cache.insert(s, value);
             value
         }
