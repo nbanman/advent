@@ -16,8 +16,8 @@ fn parse_input(data: &str) -> Image {
     // second being the number of galaxies. We separate the axes to avoid repeat calculation.
     let x_galaxies: Vec<(usize, usize)> = (0..width).into_iter()
         .map(|x| {
-            let count = (0..height).map(|y| data.chars().nth(x + y * width).unwrap())
-                .filter(|c| *c == '#')
+            let count = (0..height).map(|y| data.as_bytes()[x + y * width])
+                .filter(|c| *c == '#' as u8)
                 .count();
             (x, count)
         })
@@ -36,13 +36,13 @@ fn parse_input(data: &str) -> Image {
     // for each axis, track the indices representing expansion fields
     let x_expansion: Vec<usize> = (0..width - 1).into_iter()
         .filter(|x| {
-            (0..height).into_iter().all(|y| data.chars().nth(*x + y * width).unwrap() == '.')
+            (0..height).into_iter().all(|y| data.as_bytes()[*x + y * width] == '.' as u8)
         })
         .collect();
     let y_expansion: Vec<usize> = (0..height).into_iter()
         .filter(|y| {
             (0..width - 1).into_iter().all(|x| {
-                data.chars().nth(x + *y * width).unwrap() == '.'
+                data.as_bytes()[x + *y * width] == '.' as u8
             })
         })
         .collect();
