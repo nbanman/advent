@@ -20,10 +20,12 @@ fn parse_input(garden: &str) -> (usize, Vec<u8>) {
         let neighbors: Vec<_> = vec![pos - (width + 1), pos + 1, pos - 1, pos + (width + 1)]
             .into_iter()
             .filter(|neighbor| {
-                if *neighbor < 0 {
-                    false
-                } else if let Some(c) = garden_slice.get(*neighbor as usize) {
-                    "#\n".find(*c as char) == None && !visited[*neighbor as usize]
+                if let Ok(neighbor) = usize::try_from(*neighbor) {
+                    if let Some(c) = garden_slice.get(neighbor) {
+                        "#\n".find(*c as char) == None && !visited[neighbor]
+                    } else {
+                        false
+                    }
                 } else {
                     false
                 }
