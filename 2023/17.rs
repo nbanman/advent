@@ -1,45 +1,5 @@
 use advent::prelude::*;
 
-#[derive(Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Hash, Debug)]
-enum Dir { N, E, S, W }
-
-#[derive(Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Hash, Debug)]
-struct State {
-    pos: (isize, isize),
-    dir: Dir,
-    straights: u32,
-}
-
-#[derive(Clone, Eq, Hash, Debug)]
-struct Edge {
-    state: State,
-    weight: u32,
-}
-
-impl PartialEq for Edge {
-    fn eq(&self, other: &Self) -> bool {
-        self.weight == other.weight
-    }
-
-    fn ne(&self, other: &Self) -> bool {
-        self.weight != other.weight
-    }
-}
-
-impl PartialOrd for Edge {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        other.weight.partial_cmp(&self.weight)
-    }
-}
-
-impl Ord for Edge {
-    fn cmp(&self, other: &Self) -> Ordering {
-        let ordering = other.weight.cmp(&self.weight);
-        println!("{:?}", ordering);
-        ordering
-    }
-}
-
 fn parse_input(input: &str) -> Vec<Vec<u32>> {
     input.lines()
         .map(|line| line.chars().filter_map(|c| c.to_digit(10)).collect())
@@ -50,185 +10,106 @@ fn default_input() -> Vec<Vec<u32>> {
     parse_input(include_input!(2023 / 17))
 }
 
-fn part1(city: Vec<Vec<u32>>) -> u32 {
-    let start = State { pos: (0, 0), dir: Dir::E, straights: 0 };
-    let end = (city[0].len() as isize - 1, city.len() as isize - 1);
-    let mut weights = HashMap::new();
-    weights.insert(start.clone(), 0);
-    let mut q = BinaryHeap::new();
-    q.push(Edge { state: start, weight: 0 });
-    let mut visited: HashSet<Edge> = HashSet::new();
+fn astar(city: Vec<Vec<u32>>, l: usize, h: usize) -> u32 {
+    let width = city.first().unwrap().len();
+    let height = city.len();
+    let mut bq = vec![Vec::with_capacity(300); 100];
+    bq[0].push(0);
+    bq[0].push(1);
+    let mut cost = vec![vec![vec![0_u32; 2]; width]; height];
+    let end = width * height - 1;
+    let mut bucket_index = 0_usize;
+
     loop {
-        let current = if let Some(popped) = poll_unique(&mut q, &visited) {
-            popped
-        } else {
-            break;
-        };
-        visited.insert(current.to_owned());
-        if current.state.pos == end {
-            return current.weight.to_owned();
-        }
-        // make new edges
-        let mut edges = Vec::new();
-        if current.state.straights < 3 {
-            if let Some(neighbor) = move_crucible(&current.state, &current.state.dir, &city) {
-                edges.push(neighbor)
+        while let Some(state) = bq[bucket_index % 100].pop() {
+            let pos = state >> 1;
+            let dir = state & 1;
+            let x = pos % width;
+            let y = pos / width;
+            let steps = cost[y][x][dir];
+
+            if pos == end { return steps };
+
+            let heuristic = {|x: usize, y: usize, steps: u32|
+                (steps as usize + width - x + height - y) % 100
             };
+
+            let mut new_x;
+            let mut new_y;
+            let mut new_steps;
+
+            if dir == 0 {
+                // left
+                new_x = x;
+                new_y = y;
+                new_steps = steps;
+                for i in 1..=h {
+                    if i > x { break };
+                    new_x -= 1;
+                    new_steps += city[new_y][new_x];
+
+                    if i >= l && (cost[new_y][new_x][1] == 0 || new_steps < cost[new_y][new_x][1]) {
+                        bq[heuristic(x - i, y, new_steps)]
+                            .push(((new_y * width + new_x) << 1) + 1);
+                        cost[new_y][new_x][1] = new_steps;
+                    }
+                }
+                // right
+                new_x = x;
+                new_y = y;
+                new_steps = steps;
+                for i in 1..=h {
+                    if x + i >= width { break };
+                    new_x += 1;
+                    new_steps += city[new_y][new_x];
+
+                    if i >= l && (cost[new_y][new_x][1] == 0 || new_steps < cost[new_y][new_x][1]) {
+                        bq[heuristic(x + i, y, new_steps)]
+                            .push(((new_y * width + new_x) << 1) + 1);
+                        cost[new_y][new_x][1] = new_steps;
+                    }
+                }
+            } else {
+                // up
+                new_x = x;
+                new_y = y;
+                new_steps = steps;
+                for i in 1..=h {
+                    if i > y { break };
+                    new_y -= 1;
+                    new_steps += city[new_y][new_x];
+
+                    if i >= l && (cost[new_y][new_x][0] == 0 || new_steps < cost[new_y][new_x][0]) {
+                        bq[heuristic(x, y - i, new_steps)]
+                            .push((new_y * width + new_x) << 1);
+                        cost[new_y][new_x][0] = new_steps;
+                    }
+                }
+
+                // down
+                new_x = x;
+                new_y = y;
+                new_steps = steps;
+                for i in 1..=h {
+                    if y + i >= height { break };
+                    new_y += 1;
+                    new_steps += city[new_y][new_x];
+
+                    if i >= l && (cost[new_y][new_x][0] == 0 || new_steps < cost[new_y][new_x][0]) {
+                        bq[heuristic(x, y + i, new_steps)]
+                            .push((new_y * width + new_x) << 1);
+                        cost[new_y][new_x][0] = new_steps;
+                    }
+                }
+            }
         }
-        let left = turn_left(&current.state.dir);
-        if let Some(neighbor) = move_crucible(&current.state, &left, &city) {
-            edges.push(neighbor)
-        };
-        let right = turn_right(&current.state.dir);
-        if let Some(neighbor) = move_crucible(&current.state, &right, &city) {
-            edges.push(neighbor)
-        };
-        edges.iter().for_each(|edge| {
-            let alternate_weight = &current.weight + edge.weight;
-            // println!("State: {:?}: {:?}", edge, alternate_weight);
-            let weight = if let Some(weight) = weights.get(&edge.state) {
-                weight
-            } else {
-                &u32::MAX
-            };
-            if &alternate_weight < weight {
-                weights.insert(edge.state, alternate_weight);
-                q.push(Edge { state: edge.state, weight: alternate_weight });
-            }
-        });
-    }
-    0
-}
-
-fn turn_left(dir: &Dir) -> Dir {
-    match dir {
-        Dir::N => Dir::W,
-        Dir::E => Dir::N,
-        Dir::S => Dir::E,
-        Dir::W => Dir::S,
+        bucket_index += 1;
     }
 }
 
-fn turn_right(dir: &Dir) -> Dir {
-    match dir {
-        Dir::N => Dir::E,
-        Dir::E => Dir::S,
-        Dir::S => Dir::W,
-        Dir::W => Dir::N,
-    }
-}
+fn part1(city: Vec<Vec<u32>>) -> u32 { astar(city, 1, 3) }
 
-fn move_crucible(state: &State, dir: &Dir, city: &Vec<Vec<u32>>) -> Option<Edge> {
-    let (x, y) = state.pos;
-    let (x, y) = match dir {
-        Dir::N => (x, y - 1),
-        Dir::E => (x + 1, y),
-        Dir::S => (x, y + 1),
-        Dir::W => (x - 1, y),
-    };
-    let x1: usize = x.try_into().ok()?;
-    let y1: usize = y.try_into().ok()?;
-
-    let weight = city.get(y1)?.get(x1)?;
-    let straights = if state.dir == *dir { state.straights + 1 } else { 1 };
-    return Some(Edge { state: State { pos: (x, y), dir: dir.to_owned(), straights }, weight: weight.to_owned() });
-}
-
-fn move_crucible_2(state: &State, dir: &Dir, distance: u32, city: &Vec<Vec<u32>>) -> Option<Edge> {
-    if distance == 0 { return None };
-    let potential = (1..=distance)
-        .fold(Some((state.pos, 0u32)), |acc, _| {
-            if let Some((current_pos, heat_loss)) = acc {
-                let (x, y) = current_pos;
-                let (x, y) = match dir {
-                    Dir::N => (x, y - 1),
-                    Dir::E => (x + 1, y),
-                    Dir::S => (x, y + 1),
-                    Dir::W => (x - 1, y),
-                };
-                let x1: usize = x.try_into().ok()?;
-                let y1: usize = y.try_into().ok()?;
-                let weight = heat_loss + city.get(y1)?.get(x1)?;
-                Some(((x, y), weight))
-            } else {
-                None
-            }
-        });
-    if let Some((pos, weight)) = potential {
-        let straights = if state.dir == *dir { state.straights + distance } else { distance };
-        let edge = Edge { state: State {
-            pos,
-            dir: dir.to_owned(),
-            straights,
-        }, weight };
-        Some(edge)
-    } else {
-        None
-    }
-
-}
-
-fn poll_unique(q: &mut BinaryHeap<Edge>, visited: &HashSet<Edge>) -> Option<Edge> {
-    while let Some(popped) = q.pop() {
-        if !visited.contains(&popped) { return Some(popped); }
-    }
-    None
-}
-
-fn part2(city: Vec<Vec<u32>>) -> u32 {
-    let start = State { pos: (0, 0), dir: Dir::E, straights: 0 };
-    let end = (city[0].len() as isize - 1, city.len() as isize - 1);
-    let mut weights = HashMap::new();
-    weights.insert(start.clone(), 0);
-    let mut q = BinaryHeap::new();
-    q.push(Edge { state: start, weight: 0 });
-    let mut visited: HashSet<Edge> = HashSet::new();
-    loop {
-        let current = if let Some(popped) = poll_unique(&mut q, &visited) {
-            popped
-        } else {
-            break;
-        };
-        visited.insert(current.to_owned());
-        if current.state.pos == end {
-            return current.weight.to_owned();
-        }
-        // make new edges
-        let mut edges = Vec::new();
-
-        // go straight
-        let distance: u32 = match current.state.straights {
-            0 => 4,
-            4..=9 => 1,
-            _ => 0,
-        };
-        if let Some(neighbor) = move_crucible_2(&current.state, &current.state.dir, distance, &city) {
-            edges.push(neighbor)
-        };
-
-        let left = turn_left(&current.state.dir);
-        if let Some(neighbor) = move_crucible_2(&current.state, &left, 4, &city) {
-            edges.push(neighbor)
-        };
-        let right = turn_right(&current.state.dir);
-        if let Some(neighbor) = move_crucible_2(&current.state, &right, 4, &city) {
-            edges.push(neighbor)
-        };
-        edges.iter().for_each(|edge| {
-            let alternate_weight = &current.weight + edge.weight;
-            let weight = if let Some(weight) = weights.get(&edge.state) {
-                weight
-            } else {
-                &u32::MAX
-            };
-            if &alternate_weight < weight {
-                weights.insert(edge.state, alternate_weight);
-                q.push(Edge { state: edge.state, weight: alternate_weight });
-            }
-        });
-    }
-    0
-}
+fn part2(city: Vec<Vec<u32>>) -> u32 { astar(city, 4, 10) }
 
 fn main() {
     let solution = advent::new(default_input).part(part1).part(part2).build();
