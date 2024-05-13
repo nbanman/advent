@@ -1,37 +1,42 @@
 use advent::prelude::*;
 
 fn parse_input(input: &str) -> (Vec<VecDeque<u8>>, Vec<Move>) {
-    let (s, p) = input.split_once("\n\n").unwrap();
+    let (stack_str, move_str) = input.split_once("\n\n").unwrap();
 
-    let stacks: Vec<VecDeque<_>> = s
-        .lines()
-        .next_back()
-        .unwrap()
-        .match_indices(|c: char| c.is_ascii_digit())
-        .map(|(m, _)| {
-            s.lines()
-                .rev()
-                .skip(1)
-                .filter_map(|line| {
-                    line.as_bytes().get(m).and_then(|&b| match b {
-                        b'A'..=b'Z' => Some(b),
-                        b' ' => None,
-                        b => panic!("unexpected byte `{b}`"),
-                    })
+    let mut stacks: Vec<VecDeque<u8>> = Vec::with_capacity(9);
+    for _ in 0..9 {
+        stacks.push(VecDeque::new());
+    }
+
+    stack_str.lines()
+        .dropping_back(1)
+        .for_each(|line| {
+            line
+                .chars()
+                .collect::<Vec<char>>()
+                .chunks(4)
+                .enumerate()
+                .for_each(|(idx, chunk)| {
+                    let i = chunk[1];
+                    if i != ' ' {
+                        stacks[idx].push_back(i as u8)
+                    }
                 })
-                .collect()
-        })
-        .collect();
+        });
 
-    let moves = regex!(r"move (\d+) from (\d+) to (\d+)")
-        .captures_iter(p)
-        .map(|caps| {
-            let quantity = caps[1].parse().unwrap();
-            let from = caps[2].parse::<usize>().unwrap() - 1;
-            let to = caps[3].parse::<usize>().unwrap() - 1;
-            Move { quantity, from, to }
-        })
-        .collect();
+    let moves = move_str
+        .lines()
+        .map(|line| {
+            let parts = line
+                .split_whitespace()
+                .filter_map(|s| s.parse::<usize>().ok())
+                .collect::<Vec<_>>();
+            Move {
+                quantity: parts[0],
+                from: parts[1] - 1,
+                to: parts[2] - 1,
+            }
+        }).collect();
 
     (stacks, moves)
 }
@@ -48,27 +53,34 @@ struct Move {
 }
 
 fn top(stacks: &[VecDeque<u8>]) -> String {
-    let bs: Vec<_> = stacks.iter().filter_map(|s| s.back().copied()).collect();
+    let bs: Vec<_> = stacks.iter().filter_map(|s| s.front().copied()).collect();
     String::from_utf8(bs).unwrap()
 }
 
-fn part1((mut stacks, moves): (Vec<VecDeque<u8>>, Vec<Move>)) -> String {
-    for m in moves {
-        for _ in 0..m.quantity {
-            let x = stacks[m.from].pop_back().unwrap();
-            stacks[m.to].push_back(x);
+fn part1((mut stacks, instructions): (Vec<VecDeque<u8>>, Vec<Move>)) -> String {
+    for Move { quantity, from, to} in instructions {
+        for _ in 0..quantity {
+            if let Some(crater) = stacks[from].pop_front() {
+                stacks[to].push_front(crater)
+            }
         }
     }
     top(&stacks)
 }
 
-fn part2((mut stacks, moves): (Vec<VecDeque<u8>>, Vec<Move>)) -> String {
-    for m in moves {
-        for _ in 0..m.quantity {
-            let x = stacks[m.from].pop_back().unwrap();
-            stacks[m.to].push_front(x);
+fn part2((mut stacks, instructions): (Vec<VecDeque<u8>>, Vec<Move>)) -> String {
+    let mut temp = VecDeque::new();
+    for Move { quantity, from, to} in instructions {
+        for _ in 0..quantity {
+            if let Some(crater) = stacks[from].pop_front() {
+                temp.push_front(crater)
+            }
         }
-        stacks[m.to].rotate_left(m.quantity);
+        while !temp.is_empty() {
+            if let Some(crater) = temp.pop_front() {
+                stacks[to].push_front(crater)
+            }
+        }
     }
     top(&stacks)
 }
@@ -98,6 +110,6 @@ move 1 from 1 to 2",
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone()), "FRDSQRRCD");
-    assert_eq!(part2(input), "HRFTQVWNN");
+    assert_eq!(part1(input.clone()), "ZSQVCCJLL");
+    assert_eq!(part2(input), "QZFJRWHGS");
 }
