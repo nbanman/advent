@@ -9,7 +9,7 @@ fn parse_input(input: &str) -> Vec<Vector2> {
                 "D" => vector![0, 1],
                 "L" => vector![-1, 0],
                 "R" => vector![1, 0],
-                dir => panic!("unknown direction `{dir}`"),
+                dir => panic!("unknown direction `{}`", dir),
             };
             let dist = dist.parse::<usize>().unwrap();
             vec![dir; dist]
