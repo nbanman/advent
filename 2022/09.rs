@@ -1,55 +1,54 @@
 use advent::prelude::*;
-
-fn parse_input(input: &str) -> Vec<(Vector2, i64)> {
+fn parse_input(input: &str) -> Vec<Vector2> {
     input
         .lines()
-        .map(|line| {
-            let (d, n) = line.split_once(' ').unwrap();
-            let d = match d {
-                "U" => vector![0, 1],
-                "D" => vector![0, -1],
+        .flat_map(|line| {
+            let (dir, dist) = line.split_once(' ').unwrap();
+            let dir = match dir {
+                "U" => vector![0, -1],
+                "D" => vector![0, 1],
                 "L" => vector![-1, 0],
                 "R" => vector![1, 0],
-                d => panic!("unknown direction `{d}`"),
+                dir => panic!("unknown direction `{dir}`"),
             };
-            let n = n.parse::<i64>().unwrap();
-            (d, n)
+            let dist = dist.parse::<usize>().unwrap();
+            vec![dir; dist]
+        })
+        .scan(Vector2::zero(), |pos, dir| {
+            *pos = *pos + dir;
+            Some(*pos)
         })
         .collect()
 }
 
-fn default_input() -> Vec<(Vector2, i64)> {
-    parse_input(include_input!(2022 / 09))
-}
+fn default_input() -> Vec<Vector2> { parse_input(include_input!(2022 / 09)) }
 
-fn solve<const N: usize>(cmds: Vec<(Vector2, i64)>) -> usize {
-    let mut rope = [Vector2::zero(); N];
-    let mut visited = HashSet::from_iter([rope[N - 1]]);
-    for (dh, n) in cmds {
-        for _ in 0..n {
-            // Move the head of the rope
-            rope[0] += dh;
-            // Now move each knot in turn
-            for i in 1..N {
-                let dt = rope[i - 1] - rope[i];
-                if dt.x.abs() > 1 || dt.y.abs() > 1 {
-                    rope[i].x += dt.x.signum();
-                    rope[i].y += dt.y.signum();
+fn solve(first_rope: Vec<Vector2>, links: usize) -> usize {
+    (1..links)
+        .fold(first_rope, |prev_rope, _| {
+            let mut pos = Vector2::zero();
+            let mut rope= vec![pos];
+            for prev_pos in prev_rope {
+                let diff = prev_pos - pos;
+                if diff.x.abs() > 1 || diff.y.abs() > 1 {
+                    pos.x += diff.x.signum();
+                    pos.y += diff.y.signum();
+                    rope.push(pos);  // note pos is copy so no clone() needed
                 }
             }
-            // Insert the tail
-            visited.insert(rope[N - 1]);
-        }
-    }
-    visited.len()
+            rope
+        })
+        .into_iter()
+        .collect::<HashSet<_>>()
+        .len()
 }
 
-fn part1(cmds: Vec<(Vector2, i64)>) -> usize {
-    solve::<2>(cmds)
+fn part1(first_rope: Vec<Vector2>) -> usize {
+    solve(first_rope, 2)
 }
 
-fn part2(cmds: Vec<(Vector2, i64)>) -> usize {
-    solve::<10>(cmds)
+fn part2(first_rope: Vec<Vector2>) -> usize {
+    solve(first_rope, 10)
 }
 
 fn main() {
@@ -90,6 +89,6 @@ U 20",
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone()), 6470);
-    assert_eq!(part2(input), 2658);
+    assert_eq!(part1(input.clone()), 6175);
+    assert_eq!(part2(input), 2578);
 }
