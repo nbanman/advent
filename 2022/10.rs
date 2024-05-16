@@ -1,75 +1,52 @@
 use advent::prelude::*;
 
-fn parse_input(input: &str) -> Vec<Instr> {
+fn parse_input(input: &str) -> Vec<(usize, isize)> {
     input
-        .lines()
-        .map(|line| {
-            let mut it = line.split_whitespace();
-            match it.next().unwrap() {
-                "noop" => Instr::Noop,
-                "addx" => {
-                    let n = it.next().unwrap().parse().unwrap();
-                    Instr::Addx(n)
-                }
-                i => panic!("unknown instruction `{i}`"),
+        .trim_end()
+        .split(['\n', ' '])
+        .map(|word| {
+            match word {
+                "addx" | "noop" => 0,
+                d => d.parse::<isize>().unwrap()
             }
         })
+        .scan(1isize, |state, x| {
+            let old_state = state.clone();
+            *state += x;
+            Some(old_state)
+        })
+        .enumerate()
         .collect()
 }
 
-fn default_input() -> Vec<Instr> {
+fn default_input() -> Vec<(usize, isize)> {
     parse_input(include_input!(2022 / 10))
 }
-
-#[derive(Clone)]
-enum Instr {
-    Noop,
-    Addx(i64),
-}
-
-/// Returns an iterator over the cycle and the X value for that cycle.
-fn signal(instrs: Vec<Instr>) -> impl Iterator<Item = (i64, i64)> {
-    // An iterator over the change in x value (dx)
-    let it = [0]
-        .into_iter()
-        .chain(instrs.into_iter().flat_map(|instr| match instr {
-            Instr::Noop => Either::Left([0].into_iter()),
-            Instr::Addx(n) => Either::Right([0, n].into_iter()),
-        }));
-
-    // Accumulates the change in x value and enumerates it to get the cycle
-    it.scan(1, |x, dx| {
-        *x += dx;
-        Some(*x)
-    })
-    .enumerate()
-    .map(|(i, x)| (i as i64, x))
-}
-
-fn part1(instrs: Vec<Instr>) -> i64 {
-    signal(instrs)
-        .filter_map(|(i, x)| {
-            let cycle = i + 1;
-            [20, 60, 100, 140, 180, 220]
-                .contains(&cycle)
-                .some(cycle * x)
-        })
+fn part1(cpu: Vec<(usize, isize)>) -> isize {
+    cpu.into_iter()
+        .filter(|(cycle, _)| (cycle + 19) % 40 == 0)
+        .map(|(cycle, register)| (cycle + 1) as isize * register)
         .sum()
 }
 
-fn part2(dxs: Vec<Instr>) -> String {
+fn part2(cpu: Vec<(usize, isize)>) -> String {
     let mut s = String::new();
-    for (i, x) in signal(dxs) {
-        let c = i % 40;
-        if c == 0 {
-            s.push('\n')
-        }
-        if c >= x - 1 && c <= x + 1 {
-            s.push_str("██")
-        } else {
-            s.push_str("  ")
-        }
-    }
+    cpu.into_iter()
+        .take(240)
+        .map(|(cycle, register)| {
+            ((register - 1)..=(register + 1)).contains(&(cycle as isize % 40))
+        })
+        .enumerate()
+        .for_each(|(index, on)| {
+            if index != 0 && index % 40 == 0 {
+                s.push('\n');
+            }
+            if on {
+                s.push('*');
+            } else {
+                s.push(' ');
+            }
+        });
     s
 }
 
@@ -228,34 +205,30 @@ noop
 noop
 noop",
     );
-    assert_eq!(part1(input.clone()), 13140);
+    assert_eq!(part1(input.clone()), 11884);
     assert_eq!(
         trim_ends(part2(input)),
-        "
-████    ████    ████    ████    ████    ████    ████    ████    ████    ████
-██████      ██████      ██████      ██████      ██████      ██████      ██████
-████████        ████████        ████████        ████████        ████████
-██████████          ██████████          ██████████          ██████████
-████████████            ████████████            ████████████            ████████
-██████████████              ██████████████              ██████████████
-"
+        "⚪⚪⚫⚫⚪⚪⚫⚫⚪⚪⚫⚫⚪⚪⚫⚫⚪⚪⚫⚫⚪⚪⚫⚫⚪⚪⚫⚫⚪⚪⚫⚫⚪⚪⚫⚫⚪⚪⚫⚫
+⚪⚪⚪⚫⚫⚫⚪⚪⚪⚫⚫⚫⚪⚪⚪⚫⚫⚫⚪⚪⚪⚫⚫⚫⚪⚪⚪⚫⚫⚫⚪⚪⚪⚫⚫⚫⚪⚪⚪⚫
+⚪⚪⚪⚪⚫⚫⚫⚫⚪⚪⚪⚪⚫⚫⚫⚫⚪⚪⚪⚪⚫⚫⚫⚫⚪⚪⚪⚪⚫⚫⚫⚫⚪⚪⚪⚪⚫⚫⚫⚫
+⚪⚪⚪⚪⚪⚫⚫⚫⚫⚫⚪⚪⚪⚪⚪⚫⚫⚫⚫⚫⚪⚪⚪⚪⚪⚫⚫⚫⚫⚫⚪⚪⚪⚪⚪⚫⚫⚫⚫⚫
+⚪⚪⚪⚪⚪⚪⚫⚫⚫⚫⚫⚫⚪⚪⚪⚪⚪⚪⚫⚫⚫⚫⚫⚫⚪⚪⚪⚪⚪⚪⚫⚫⚫⚫⚫⚫⚪⚪⚪⚪
+⚪⚪⚪⚪⚪⚪⚪⚫⚫⚫⚫⚫⚫⚫⚪⚪⚪⚪⚪⚪⚪⚫⚫⚫⚫⚫⚫⚫⚪⚪⚪⚪⚪⚪⚪⚫⚫⚫⚫⚫"
     );
 }
 
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone()), 17840);
+    assert_eq!(part1(input.clone()), 16406);
     assert_eq!(
         trim_ends(part2(input)),
-        "
-████████    ████    ██          ████    ██    ██  ██        ██████      ████
-██        ██    ██  ██        ██    ██  ██    ██  ██        ██    ██  ██    ██
-██████    ██    ██  ██        ██        ██    ██  ██        ██    ██  ██
-██        ████████  ██        ██  ████  ██    ██  ██        ██████    ██  ████
-██        ██    ██  ██        ██    ██  ██    ██  ██        ██        ██    ██
-████████  ██    ██  ████████    ██████    ████    ████████  ██          ██████
-"
+        "**** *  *   ** **** ***    ** **** ****
+   * * *     * *    *  *    * *       *
+  *  **      * ***  ***     * ***    *
+ *   * *     * *    *  *    * *     *
+*    * *  *  * *    *  * *  * *    *
+**** *  *  **  *    ***   **  *    ****"
     );
 }
 
