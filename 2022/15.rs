@@ -1,137 +1,122 @@
+use std::ops::Range;
 use advent::prelude::*;
 
-fn parse_input(input: &str) -> Vec<(Vector2, Vector2, i64)> {
-    regex!(
-        r"Sensor at x=(?P<sx>\-?\d+), y=(?P<sy>\-?\d+): closest beacon is at x=(?P<bx>\-?\d+), y=(?P<by>\-?\d+)"
-    ).captures_iter(input)
-        .map(|caps| {
-            let sx: i64 = caps["sx"].parse().unwrap();
-            let sy: i64 = caps["sy"].parse().unwrap();
-            let bx: i64 = caps["bx"].parse().unwrap();
-            let by: i64 = caps["by"].parse().unwrap();
-            let sensor = vector![sx, sy];
-            let beacon = vector![bx, by];
-            // Precompute the distance since its needed everywhere
-            let d = (sensor - beacon).l1_norm();
-            (sensor, beacon, d)
-        })
+#[derive(Clone)]
+struct Sensor {
+    pos: Vector2,
+    beacon_pos: Vector2,
+}
+
+impl Sensor {
+    fn to_range(&self, y: i64) -> Option<Range<i64>> {
+        let x_distance = (self.pos.x - self.beacon_pos.x).abs() +
+            (self.pos.y - self.beacon_pos.y).abs() -
+            (self.pos.y - y).abs();
+        if x_distance >= 0 {
+            Some(self.pos.x - x_distance..self.pos.x + x_distance + 1)
+        } else {
+            None
+        }
+    }
+}
+
+fn min_max<T, R: PartialOrd, F>(items: &[T], selector: F) -> (&T, &T)
+where
+    R: Clone,
+    F: Fn(&T) -> R
+{
+    let mut min = &items[0];
+    let mut min_value = selector(min);
+    let mut max = min;
+    let mut max_value = min_value.clone();
+    for item in items {
+        let selected = selector(item);
+        if selected < min_value {
+            min = item;
+            min_value = selected;
+        } else if selected > max_value {
+            max = item;
+            max_value = selected
+        }
+    }
+    (min, max)
+}
+
+fn is_contiguous(a: &Range<i64>, b: &Range<i64>) -> Option<Range<i64>> {
+    let binding = &[a, b];
+    let (lesser, greater) = min_max(binding, |it| it.start);
+    // println!("{}..{}, {}..{}", lesser.start, lesser.end, greater.start, greater.end);
+    if lesser.end >= greater.start {
+        Some(lesser.start..max(lesser.end, greater.end))
+    } else {
+        None
+    }
+}
+
+fn parse_input(input: &str) -> Vec<Sensor> {
+    regex!(r"-?\d+")
+        .find_iter(input)
+        .map(|cap| cap.as_str().parse().unwrap())
+        .array_chunked::<4>()
+        .map(|[x1, y1, x2, y2]: [i64; 4]| Sensor { pos: vector![x1, y1], beacon_pos: vector![x2, y2] })
         .collect()
 }
 
-fn default_input() -> Vec<(Vector2, Vector2, i64)> {
+fn concatenate(row_ranges: &mut Vec<Range<i64>>) -> Vec<Range<i64>> {
+    let mut i: usize;
+    let mut size = 0usize;
+    while size != row_ranges.len() {
+        size = row_ranges.len();
+        i = 0;
+        while i < row_ranges.len() - 1 {
+            let mut j = i + 1;
+            while j < row_ranges.len() {
+                if let Some(union) = is_contiguous(&row_ranges[i],&row_ranges[j]){
+                    row_ranges[i] = union;
+                    row_ranges.remove(j);
+                    // println!("{:?}", row_ranges.remove(j));
+                } else {
+                    j += 1;
+                }
+            }
+            i += 1;
+        }
+    }
+    row_ranges.clone()
+}
+fn row_ranges(sensors: &Vec<Sensor>, y: i64) -> Vec<Range<i64>> {
+    let mut row_ranges: Vec<_> = sensors.into_iter()
+        .filter_map(|sensor| sensor.to_range(y))
+        .collect();
+    concatenate(&mut row_ranges)
+}
+
+fn default_input() -> Vec<Sensor> {
     parse_input(include_input!(2022 / 15))
 }
 
-/// Returns true if the given point is in range of any sensor.
-fn in_range(data: &[(Vector2, Vector2, i64)], x: i64, y: i64) -> bool {
-    let p = vector![x, y];
-    data.iter()
-        .any(|&(sensor, _, d)| (sensor - p).l1_norm() <= d)
+
+fn part1(sensors: Vec<Sensor>) -> i64 {
+    row_ranges(&sensors, 2_000_000).into_iter()
+        .map(|range| {
+            range.end - range.start
+        })
+        .sum()
 }
 
-/// Returns the intersection point of two lines.
-fn intersects((m1, c1): (i64, i64), (m2, c2): (i64, i64)) -> [i64; 2] {
-    // Some quick primary school maths to find the intersection of the two
-    // lines:
-    //   y = m1 * x + c1
-    //   y = m2 * x + c2
-    //
-    // Solve
-    // =>  m1*x + c1 = m2*x + c2
-    // =>  (m1 - m2)*x = c2 - c1
-    // =>  x = (c2 - c1) / (m1 - m2)
-    //
-    let x = (c2 - c1) / (m1 - m2);
-    let y = m1 * x + c1;
-    [x, y]
-}
-
-fn lines(data: &[(Vector2, Vector2, i64)]) -> (Vec<i64>, Vec<i64>) {
-    // For m = 1 which is line going from bottom left to top right
-    let mut up = Vec::new();
-    // For m = -1 which is a line going from top left to bottom right
-    let mut down = Vec::new();
-
-    for &(sensor, _, d) in data {
-        // Manhattan distance plus one
-        let d = d + 1;
-
-        // Now find the line equation for each of the four diamond edges...
-        for [m, side] in [[-1, -1], [-1, 1], [1, -1], [1, 1]] {
-            // Shift the y point of the sensor such that it becomes the top or
-            // bottom corner of the diamond.
-            let [x, y] = [sensor.x, sensor.y + (d * side)];
-
-            // Then use this point to solve for c in the straight line equation:
-            //     y = mx + c
-            // =>  c = y - mx
-            let c = y - m * x;
-
-            match m {
-                1 => up.push(c),
-                -1 => down.push(c),
-                _ => unreachable!(),
-            }
-        }
-    }
-
-    (up, down)
-}
-
-fn part1(data: Vec<(Vector2, Vector2, i64)>, row: i64) -> usize {
-    let mut count = 0;
-    for x in (-5 * row)..(5 * row) {
-        if in_range(&data, x, row) {
-            count += 1;
-        }
-    }
-    let objs: HashSet<_> = data.into_iter().flat_map(|(s, b, _)| [s, b]).collect();
-    for obj in &objs {
-        if obj.y == row {
-            count -= 1;
-        }
-    }
-    count
-}
-
-// In order for there to only be one single point not covered by any of the
-// sensors it would need to be at the edge of four separate sensor areas,
-// otherwise there could be multiple solutions. (Nit: I think technically if it
-// lay on the edge of the bounding box this logic won't work, but lets assume it
-// isn't.) Using this logic we can do the following.
-//
-// - Take each sensor's diamond area increased by 1 and find the edges of this
-//   shape as straight lines.
-// - Take the lines from all the diamonds and find the all the intersection
-//   points.
-// - One of these must be the distress beacon!
-//
-// To implement this we will represent each of these lines as m and c as in y =
-// mx + c. Since all of the lines only have one of two m values that and lines
-// with the same m value won't intersect we store to lists for each of the c
-// values.
-fn part2(data: Vec<(Vector2, Vector2, i64)>, max: i64) -> i64 {
-    let (up, down) = lines(&data);
-
-    let bounds = 0..=max;
-    for (&c1, &c2) in iproduct!(&up, &down) {
-        // Find the point that these two lines intersect
-        let [x, y] = intersects((1, c1), (-1, c2));
-
-        // If it is within bounds and not in range of any sensor then we have
-        // found the distress beacon!
-        if bounds.contains(&x) && bounds.contains(&y) && !in_range(&data, x, y) {
-            return x * 4_000_000 + y;
-        }
-    }
-
-    panic!("distress beacon not found")
+fn part2(sensors: Vec<Sensor>) -> i64 {
+    let (y, range) = iter::successors(Some(0i64), |i| Some(i + 1))
+        .map(|y| (y, row_ranges(&sensors, y)))
+        .find(|(_, ranges)| ranges.len() > 1)
+        .unwrap();
+    let x = range.iter().min_by(|x, y| x.start.cmp(&y.start)).unwrap().end + 1;
+    4_000_000i64 * x + y
 }
 
 fn main() {
     let solution = advent::new(default_input)
-        .part(|i| part1(i, 2_000_000))
-        .part(|i| part2(i, 4_000_000))
+        .part(|i| part1(i))
+        .part(|i| part2(i))
         .build();
     solution.cli()
 }
@@ -154,13 +139,13 @@ Sensor at x=16, y=7: closest beacon is at x=15, y=3
 Sensor at x=14, y=3: closest beacon is at x=15, y=3
 Sensor at x=20, y=1: closest beacon is at x=15, y=3",
     );
-    assert_eq!(part1(input.clone(), 10), 26);
-    assert_eq!(part2(input, 20), 56000011);
+    assert_eq!(part1(input.clone()), 26);
+    assert_eq!(part2(input), 56000011);
 }
 
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone(), 2_000_000), 5073496);
-    assert_eq!(part2(input, 4_000_000), 13081194638237);
+    assert_eq!(part1(input.clone()), 5073496);
+    assert_eq!(part2(input), 13081194638237);
 }
