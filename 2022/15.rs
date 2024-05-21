@@ -1,4 +1,4 @@
-use std::ops::Range;
+use std::ops::RangeInclusive;
 use advent::prelude::*;
 
 #[derive(Clone)]
@@ -8,12 +8,12 @@ struct Sensor {
 }
 
 impl Sensor {
-    fn to_range(&self, y: i64) -> Option<Range<i64>> {
+    fn to_range(&self, y: i64) -> Option<RangeInclusive<i64>> {
         let x_distance = (self.pos.x - self.beacon_pos.x).abs() +
             (self.pos.y - self.beacon_pos.y).abs() -
             (self.pos.y - y).abs();
         if x_distance >= 0 {
-            Some(self.pos.x - x_distance..self.pos.x + x_distance + 1)
+            Some(self.pos.x - x_distance..=self.pos.x + x_distance)
         } else {
             None
         }
@@ -42,12 +42,11 @@ where
     (min, max)
 }
 
-fn is_contiguous(a: &Range<i64>, b: &Range<i64>) -> Option<Range<i64>> {
+fn is_contiguous(a: &RangeInclusive<i64>, b: &RangeInclusive<i64>) -> Option<RangeInclusive<i64>> {
     let binding = &[a, b];
-    let (lesser, greater) = min_max(binding, |it| it.start);
-    // println!("{}..{}, {}..{}", lesser.start, lesser.end, greater.start, greater.end);
-    if lesser.end >= greater.start {
-        Some(lesser.start..max(lesser.end, greater.end))
+    let (lesser, greater) = min_max(binding, |it| it.start());
+    if lesser.end() >= greater.start() {
+        Some(*lesser.start()..=*max(lesser.end(), greater.end()))
     } else {
         None
     }
@@ -62,7 +61,7 @@ fn parse_input(input: &str) -> Vec<Sensor> {
         .collect()
 }
 
-fn concatenate(row_ranges: &mut Vec<Range<i64>>) -> Vec<Range<i64>> {
+fn concatenate(row_ranges: &mut Vec<RangeInclusive<i64>>) -> Vec<RangeInclusive<i64>> {
     let mut i: usize;
     let mut size = 0usize;
     while size != row_ranges.len() {
@@ -74,7 +73,6 @@ fn concatenate(row_ranges: &mut Vec<Range<i64>>) -> Vec<Range<i64>> {
                 if let Some(union) = is_contiguous(&row_ranges[i],&row_ranges[j]){
                     row_ranges[i] = union;
                     row_ranges.remove(j);
-                    // println!("{:?}", row_ranges.remove(j));
                 } else {
                     j += 1;
                 }
@@ -84,7 +82,7 @@ fn concatenate(row_ranges: &mut Vec<Range<i64>>) -> Vec<Range<i64>> {
     }
     row_ranges.clone()
 }
-fn row_ranges(sensors: &Vec<Sensor>, y: i64) -> Vec<Range<i64>> {
+fn row_ranges(sensors: &Vec<Sensor>, y: i64) -> Vec<RangeInclusive<i64>> {
     let mut row_ranges: Vec<_> = sensors.into_iter()
         .filter_map(|sensor| sensor.to_range(y))
         .collect();
@@ -99,7 +97,7 @@ fn default_input() -> Vec<Sensor> {
 fn part1(sensors: Vec<Sensor>) -> i64 {
     row_ranges(&sensors, 2_000_000).into_iter()
         .map(|range| {
-            range.end - range.start
+            range.end() - range.start()
         })
         .sum()
 }
@@ -109,7 +107,7 @@ fn part2(sensors: Vec<Sensor>) -> i64 {
         .map(|y| (y, row_ranges(&sensors, y)))
         .find(|(_, ranges)| ranges.len() > 1)
         .unwrap();
-    let x = range.iter().min_by(|x, y| x.start.cmp(&y.start)).unwrap().end + 1;
+    let x = range.iter().min_by(|x, y| x.start().cmp(&y.start())).unwrap().end() + 1;
     4_000_000i64 * x + y
 }
 
