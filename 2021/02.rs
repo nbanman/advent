@@ -1,52 +1,46 @@
 use advent::prelude::*;
 
-fn parse_input(input: &str) -> Vec<(Command, i64)> {
-    input
-        .lines()
+fn parse_input(input: &str) -> Vec<(&str, isize)> {
+    input.lines()
         .map(|line| {
-            let (cmd, value) = line.split_once(char::is_whitespace).unwrap();
-            (
-                match cmd {
-                    "forward" => Command::Forward,
-                    "down" => Command::Down,
-                    "up" => Command::Up,
-                    d => panic!("unknown command `{d}`"),
-                },
-                value.parse().unwrap(),
-            )
+            let (command, amt) = line.split_once(' ').unwrap();
+            (command, amt.parse().unwrap())
         })
         .collect()
 }
 
-fn default_input() -> Vec<(Command, i64)> {
+fn default_input() -> Vec<(&'static str, isize)> {
     parse_input(include_input!(2021 / 02))
 }
 
-#[derive(Debug, Clone, Copy)]
-enum Command {
-    Forward,
-    Down,
-    Up,
-}
-
-fn part1(input: Vec<(Command, i64)>) -> i64 {
-    let (x, y) = input.iter().fold((0, 0), |(x, y), (cmd, v)| match cmd {
-        Command::Forward => (x + v, y),
-        Command::Down => (x, y + v),
-        Command::Up => (x, y - v),
-    });
+fn solve<F>(commands: Vec<(&str, isize)>, interpretation: F) -> isize
+where
+    F: Fn((isize, isize, isize), (&str, isize)) -> (isize, isize, isize)
+{
+    let (x, y, _) = commands.into_iter().fold((0isize, 0isize, 0isize), interpretation);
     x * y
 }
 
-fn part2(input: Vec<(Command, i64)>) -> i64 {
-    let (x, y, _) = input
-        .iter()
-        .fold((0, 0, 0), |(x, y, a), &(cmd, v)| match cmd {
-            Command::Forward => (x + v, y + a * v, a),
-            Command::Down => (x, y, a + v),
-            Command::Up => (x, y, a - v),
-        });
-    x * y
+fn part1(commands: Vec<(&str, isize)>) -> isize {
+    solve(commands, |(x, y, _), (cmd, amt)| {
+        match cmd {
+            "forward" => (x + amt, y, 0),
+            "down" => (x, y + amt, 0),
+            "up" => (x, y - amt, 0),
+            _ => (x, y, 0),
+        }
+    })
+}
+
+fn part2(commands: Vec<(&str, isize)>) -> isize {
+    solve(commands, |(x, y, aim), (cmd, amt)| {
+        match cmd {
+            "forward" => (x + amt, y + aim * amt, aim),
+            "down" => (x, y, aim + amt),
+            "up" => (x, y, aim - amt),
+            _ => (x, y, aim),
+        }
+    })
 }
 
 fn main() {
@@ -72,6 +66,7 @@ forward 2",
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone()), 1654760);
-    assert_eq!(part2(input), 1956047400);
+    assert_eq!(part1(input.clone()), 2117664);
+    assert_eq!(part2(input), 2073416724);
 }
+
