@@ -1,31 +1,32 @@
 use advent::prelude::*;
 
-fn parse_input(input: &str) -> Vec<i64> {
-    input
-        .split_whitespace()
-        .map(str::parse)
-        .map(Result::unwrap)
-        .collect()
+fn parse_input(input: &str) -> Vec<usize> {
+    get_numbers(input)
 }
 
-fn default_input() -> Vec<i64> {
+fn count_increased<I>(measurements: I) -> usize
+where
+    I: Iterator<Item = usize>,
+{
+    measurements
+        .array_windows()
+        .filter(|[a, b]| a < b)
+        .count()
+}
+
+fn default_input() -> Vec<usize> {
     parse_input(include_input!(2021 / 01))
 }
 
-fn part1(input: Vec<i64>) -> usize {
-    input
-        .into_iter()
-        .array_windows()
-        .filter(|[a, b]| b > a)
-        .count()
+fn part1(measurements: Vec<usize>) -> usize {
+    count_increased(measurements.into_iter())
 }
 
-fn part2(input: Vec<i64>) -> usize {
-    input
-        .into_iter()
-        .array_windows()
-        .filter(|[a, _, _, b]| b > a)
-        .count()
+fn part2(measurements: Vec<usize>) -> usize {
+    let windows = measurements
+        .windows(3)
+        .map(|x| x.into_iter().sum());
+    count_increased(windows)
 }
 
 fn main() {
@@ -43,6 +44,6 @@ fn example() {
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone()), 1448);
-    assert_eq!(part2(input), 1471);
+    assert_eq!(part1(input.clone()), 1342);
+    assert_eq!(part2(input), 1378);
 }
