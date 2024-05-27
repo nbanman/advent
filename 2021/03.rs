@@ -1,64 +1,83 @@
+use std::usize;
 use advent::prelude::*;
 
-fn parse_input(input: &str) -> Vec<i64> {
-    input
-        .split_whitespace()
-        .map(|s| i64::from_str_radix(s, 2))
-        .map(Result::unwrap)
-        .collect()
+fn parse_input(input: &str) -> (usize, Vec<usize>) {
+     let codes: Vec<usize> = input.lines()
+         .map(|line| usize::from_str_radix(line, 2).unwrap())
+         .collect();
+    let bit_length = input.find('\n').unwrap();
+    (bit_length, codes)
 }
 
-fn default_input() -> Vec<i64> {
+fn default_input() -> (usize, Vec<usize>) {
     parse_input(include_input!(2021 / 03))
 }
 
-fn partition(values: &[i64], bit: i64) -> (Vec<i64>, Vec<i64>) {
-    values.iter().partition(|&v| (v & 1 << bit) > 0)
+fn bit(v: usize, pos: usize, bit_length: usize) -> usize {
+    (v >> ((bit_length - 1) - pos)) & 1
 }
 
-fn criteria<F>(values: &[i64], bits: i64, cmp: F) -> i64
+fn find_rate(bit_length: usize, codes: &Vec<usize>, target: bool) -> usize {
+    let target = if target {
+        1
+    } else {
+        0
+    };
+    (0..bit_length).fold(0usize, |acc, pos| {
+        let meets_target = codes.iter()
+            .filter(|&code| {
+                bit(*code, pos, bit_length) == target
+            })
+            .count();
+        if meets_target * 2 >= codes.len() {
+            acc + (1 << ((bit_length - 1) - pos))
+        } else {
+            acc
+        }
+    })
+}
+
+fn find_rating<F>(bit_length: usize, codes: &Vec<usize>, predicate: F) -> usize
 where
-    F: Fn(usize, usize) -> bool,
+    F: Fn(isize) -> bool,
 {
-    let mut values = values.to_vec();
-    for bit in (0..bits).rev() {
-        let (ones, zeros) = partition(&values, bit);
-        if cmp(ones.len(), zeros.len()) {
-            values = ones;
+    let mut codes = codes.clone();
+    for pos in 0..bit_length {
+        if codes.len() > 1 {
+            let pos_sum: usize = codes.iter()
+                .map(|code| bit(*code, pos, bit_length))
+                .sum();
+            let diff: isize = pos_sum as isize * 2 - codes.len() as isize;
+            codes = codes.into_iter().filter(|code| {
+                let bit = bit(*code, pos, bit_length);
+                if predicate(diff) {
+                    bit == 1
+                } else {
+                    bit == 0
+                }
+            }).collect();
         } else {
-            values = zeros;
-        }
-        if let [value] = *values {
-            return value;
+            break
         }
     }
-    unreachable!()
+    *codes.first().unwrap()
 }
-
-fn part1(values: Vec<i64>, bits: i64) -> i64 {
-    let mut gamma = 0;
-    let mut epsilon = 0;
-    for bit in 0..bits {
-        let (ones, zeros) = partition(&values, bit);
-        if ones.len() > zeros.len() {
-            epsilon |= 1 << bit;
-        } else {
-            gamma |= 1 << bit;
-        }
-    }
+fn part1((bit_length, codes): (usize, Vec<usize>)) -> usize {
+    let gamma = find_rate(bit_length, &codes, true);
+    let epsilon = find_rate(bit_length, &codes, false);
     gamma * epsilon
 }
 
-fn part2(values: Vec<i64>, bits: i64) -> i64 {
-    let o2 = criteria(&values, bits, |ones, zeros| ones >= zeros);
-    let co2 = criteria(&values, bits, |ones, zeros| ones < zeros);
-    o2 * co2
+fn part2((bit_length, codes): (usize, Vec<usize>)) -> usize {
+    let gamma = find_rating(bit_length, &codes, |diff| diff >= 0);
+    let epsilon = find_rating(bit_length, &codes, |diff| diff < 0);
+    gamma * epsilon
 }
 
 fn main() {
     let solution = advent::new(default_input)
-        .part(|i| part1(i, 12))
-        .part(|i| part2(i, 12))
+        .part(|i| part1(i))
+        .part(|i| part2(i))
         .build();
     solution.cli()
 }
@@ -80,13 +99,19 @@ fn example() {
 00010
 01010",
     );
-    assert_eq!(part1(input.clone(), 5), 198);
-    assert_eq!(part2(input, 5), 230);
+    assert_eq!(part1(input.clone()), 198);
+    assert_eq!(part2(input), 230);
 }
 
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone(), 12), 3958484);
-    assert_eq!(part2(input, 12), 1613181);
+    assert_eq!(part1(input.clone()), 3969000);
+    assert_eq!(part2(input), 4267809);
 }
+
+// Part 1:                             (120.5 µs)
+// 3969000
+//
+// Part 2:                             (31.50 µs)
+// 4267809
