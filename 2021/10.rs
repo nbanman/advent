@@ -4,75 +4,85 @@ fn default_input() -> &'static str {
     include_input!(2021 / 10)
 }
 
-#[derive(Debug)]
-enum State {
-    Valid,
-    Corrupted(char),
-    Incomplete(Vec<char>),
+struct Maps {
+    counterparts: HashMap<u8, u8>,
+    syntax_error_score: HashMap<u8, usize>,
+    point_value: HashMap<u8, u8>
 }
 
-fn validate_line(line: &str) -> State {
-    let mut stack = Vec::new();
-    for c in line.chars() {
-        match c {
-            open @ ('(' | '[' | '{' | '<') => stack.push(open),
-            close @ (')' | ']' | '}' | '>') => {
-                let open = stack.pop().unwrap();
-                match (open, close) {
-                    ('(', ')') | ('[', ']') | ('{', '}') | ('<', '>') => continue,
-                    _ => return State::Corrupted(close),
-                }
-            }
-            c => panic!("unexpected character `{c}`"),
+impl Maps {
+    fn new() -> Maps {
+        let counterparts = [(b'(', b')'), (b'[', b']'), (b'{', b'}'), (b'<', b'>')]
+            .into_iter()
+            .collect();
+
+        let syntax_error_score = [(b')', 3), (b']', 57), (b'}', 1197), (b'>', 25137)]
+            .into_iter()
+            .collect();
+
+        let point_value = [(b')', 1), (b']', 2), (b'}', 3), (b'>', 4)]
+            .into_iter()
+            .collect();
+
+        Maps {
+            counterparts,
+            syntax_error_score,
+            point_value,
         }
     }
-    match stack.is_empty() {
-        true => State::Valid,
-        false => State::Incomplete(stack),
+
+    fn score(&self, stack: &Vec<u8>) -> usize {
+        stack.iter().rev().
+            fold(0, |acc, c| acc * 5 + *self.point_value.get(&c).unwrap() as usize)
     }
 }
 
-fn part1(input: &str) -> i64 {
+fn parse_string<F, G>(s: &str, maps: &Maps, on_corrupt: F, on_finish: G) -> Option<usize>
+where
+    F: Fn(u8) -> Option<usize>,
+    G: Fn(Vec<u8>) -> Option<usize>,
+{
+    let mut stack = Vec::new();
+    for &candidate in s.as_bytes().iter() {
+        if maps.counterparts.values().contains(&candidate) {
+            if candidate != stack.pop().unwrap() { return on_corrupt(candidate) }
+        } else {
+            stack.push(*maps.counterparts.get(&candidate).unwrap())
+        }
+    }
+    on_finish(stack)
+}
+
+fn part1(input: &str) -> usize {
+    let maps = Maps::new();
     input
         .lines()
-        .map(validate_line)
-        .filter_map(|state| match state {
-            State::Corrupted(bad) => Some(bad),
-            _ => None,
-        })
-        .map(|c| match c {
-            ')' => 3,
-            ']' => 57,
-            '}' => 1197,
-            '>' => 25137,
-            _ => unreachable!(),
+        .filter_map(|line| {
+            parse_string(
+                line,
+                &maps,
+                |it| maps.syntax_error_score.get(&it).map(|it| *it),
+                |_| None,
+            )
         })
         .sum()
 }
 
-fn part2(input: &str) -> i64 {
+fn part2(input: &str) -> usize {
+    let maps = Maps::new();
     let scores: Vec<_> = input
         .lines()
-        .map(validate_line)
-        .filter_map(|state| match state {
-            State::Incomplete(unmatched) => Some(unmatched),
-            _ => None,
+        .filter_map(|line| {
+            parse_string(
+                line,
+                &maps,
+                |_| None,
+                |it| Some(maps.score(&it))
+            )
         })
-        .map(|unmatched| {
-            unmatched.into_iter().rev().fold(0, |acc, c| {
-                acc * 5
-                    + match c {
-                        '(' => 1,
-                        '[' => 2,
-                        '{' => 3,
-                        '<' => 4,
-                        _ => unreachable!(),
-                    }
-            })
-        })
-        .sorted_unstable()
+        .sorted()
         .collect();
-    scores[scores.len() / 2]
+    *scores.get(scores.len() / 2).unwrap()
 }
 
 fn main() {
@@ -100,6 +110,6 @@ fn example() {
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input), 367059);
-    assert_eq!(part2(input), 1952146692);
+    assert_eq!(part1(input), 167379);
+    assert_eq!(part2(input), 2776842859);
 }
