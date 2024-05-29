@@ -1,49 +1,45 @@
 use advent::prelude::*;
 
-fn parse_input(input: &str) -> (Vec<u8>, Vec<isize>, Vec<usize>) {
-    let width = input.as_bytes().iter().position(|&x| x == b'\n').unwrap() as isize + 1;
-
-    let height_map: Vec<u8> = input
-        .as_bytes()
-        .iter()
-        .map(|&c| {
-            if c == b'\n' {
-                c
-            } else {
-                c - b'0'
-            }
-        })
-        .collect();
+fn parse_input(input: &str) -> (&[u8], Vec<isize>, Vec<usize>) {
+    let input = input.as_bytes();
+    let width = input.iter().position(|&x| x == b'\n').unwrap() as isize + 1;
 
     let start_vec = vec![-width, width, -1, 1];
 
-    let low_indices = (0..height_map.len())
-        .filter(|&idx| {
-            start_vec
-                .iter()
-                .map(|m| idx as isize + m)
-                .filter_map(|neighbor_idx| {
-                    height_map
-                        .try_get(neighbor_idx)
-                        .and_then(|x| if x == &b'\n' { None } else { Some(x) })
-                })
-                .all(|neighbor| neighbor > height_map.get(idx).unwrap())
+    let low_indices = (0..input.len())
+        .filter(|&pos| {
+            let height = input.get(pos).unwrap();
+            if height == &b'\n' {
+                false
+            } else {
+                start_vec.iter()
+                    .map(|m| pos as isize + m)
+                    .filter_map(|neighbor_idx| {
+                        input
+                            .try_get(neighbor_idx)
+                            .and_then(|neighbor_height| {
+                                if neighbor_height == &b'\n' { None } else { Some(neighbor_height) }
+                            })
+                    })
+                    .all(|neighbor_height| neighbor_height > height)
+            }
+
         })
         .collect();
-    (height_map, start_vec, low_indices)
+    (input, start_vec, low_indices)
 }
 
-fn default_input() -> (Vec<u8>, Vec<isize>, Vec<usize>) {
+fn default_input() -> (&'static [u8], Vec<isize>, Vec<usize>) {
     parse_input(include_input!(2021 / 09))
 }
 
-fn part1((height_map, _, low_indices): (Vec<u8>, Vec<isize>, Vec<usize>)) -> usize {
+fn part1((height_map, _, low_indices): (&[u8], Vec<isize>, Vec<usize>)) -> usize {
     low_indices.into_iter()
-        .map(|idx| *height_map.get(idx).unwrap() as usize + 1)
+        .map(|idx| (*height_map.get(idx).unwrap() + 1 - b'0') as usize)
         .sum()
 }
 
-fn part2((height_map, start_vec, low_indices): (Vec<u8>, Vec<isize>, Vec<usize>)) -> usize {
+fn part2((height_map, start_vec, low_indices): (&[u8], Vec<isize>, Vec<usize>)) -> usize {
     low_indices.into_iter()
         .map(|idx| {
             let mut q = VecDeque::new();
@@ -57,11 +53,11 @@ fn part2((height_map, start_vec, low_indices): (Vec<u8>, Vec<isize>, Vec<usize>)
                     .iter()
                     .map(|m| current_idx as isize + m)
                     .filter(|&neighbor_idx| {
-                        if let Some(neighbor_height) = height_map
+                        let neighbor_height = height_map
                             .try_get(neighbor_idx)
-                            .and_then(|x| if x == &b'\n' { None } else { Some(x) }) {
-
-                            neighbor_height != &9 && neighbor_height > current_height
+                            .and_then(|x| if x == &b'\n' { None } else { Some(x) });
+                        if let Some(neighbor_height) = neighbor_height {
+                            neighbor_height != &b'9' && neighbor_height > current_height
                         } else {
                             false
                         }
