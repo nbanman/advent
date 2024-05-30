@@ -46,8 +46,7 @@ fn part2((height_map, start_vec, low_indices): (&[u8], Vec<isize>, Vec<usize>)) 
             let mut visited = HashSet::new();
             q.push_front(idx);
             visited.insert(idx);
-            while !q.is_empty() {
-                let current_idx = q.pop_back().unwrap();
+            while let Some(current_idx) = q.pop_back() {
                 let current_height = height_map.get(current_idx).unwrap();
                 let neighbors = start_vec
                     .iter()
