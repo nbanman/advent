@@ -70,7 +70,6 @@ fn flash(cave: &mut Vec<u8>, width: isize) -> usize {
             })
             .collect();
 
-        // println!("neighbors: {:?}", neighbors);
         for neighbor_index in neighbors {
             if let Some(to_update) = cave.get_mut(neighbor_index) {
                 *to_update += 1;
@@ -88,9 +87,6 @@ fn part2((mut cave, width): (Vec<u8>, isize)) -> usize {
     let cave_size = cave.len();
     1 + iter::repeat_with(|| flash(&mut cave, width)).enumerate()
         .find_or_first(|(idx, flashed)| {
-            if idx == &194 {
-                println!("At {idx}, flashed is {flashed} and cave size is {cave_size}");
-            };
             flashed == &cave_size || idx == &194
         })
         .unwrap()
