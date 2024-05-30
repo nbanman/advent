@@ -12,8 +12,7 @@ fn parse_input(garden: &str) -> (usize, Vec<u8>) {
 
     // BFS finds neighbors and runs until the queue is empty, meaning that no more neighbors are found
     // due to everything already being visited.
-    while !q.is_empty() {
-        let (pos, steps) = q.pop_front().unwrap();
+    while let Some((pos, steps)) = q.pop_front() {
         step_count.push(steps);
         let pos = pos as isize;
         let width = width as isize;
