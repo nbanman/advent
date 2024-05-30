@@ -5,12 +5,10 @@ type Graph<'a> = HashMap<&'a str, Vec<&'a str>>;
 fn parse_input(input: &str) -> Graph<'_> {
     input
         .lines()
-        .flat_map(|line| {
-            let (from, to) = line.split_once('-').unwrap();
-            [(from, to), (to, from)]
-        })
-        .fold(HashMap::new(), |mut graph, (from, to)| {
-            graph.entry(from).or_default().push(to);
+        .map(|line| line.split_once('-').unwrap())
+        .fold(HashMap::new(), |mut graph, (a, b)| {
+            graph.entry(a).or_default().push(b);
+            if a != "start" && b != "end" { graph.entry(b).or_default().push(a) }
             graph
         })
 }
@@ -19,29 +17,45 @@ fn default_input() -> Graph<'static> {
     parse_input(include_input!(2021 / 12))
 }
 
-fn solve(graph: &Graph<'_>, is_dup_allowed: bool) -> usize {
-    let mut q = VecDeque::from([(vec!["end"], None)]);
-    let mut paths = 0;
-    while let Some((path, dup)) = q.pop_front() {
-        for &cave in &graph[path.last().unwrap()] {
-            match cave {
-                "end" => continue,
-                "start" => paths += 1,
-                cave => {
-                    let mut dup = dup;
-                    if cave.chars().all(char::is_lowercase) && path.contains(&cave) {
-                        if !is_dup_allowed || dup.is_some() {
-                            continue;
-                        }
-                        dup = Some(cave);
-                    };
-                    let next = path.iter().cloned().chain([cave]).collect();
-                    q.push_back((next, dup));
+#[derive(Eq, PartialEq)]
+struct State<'a> {
+    visits: Vec<&'a str>,
+    visited_twice: bool,
+}
+
+fn solve(edges: &Graph<'_>, allow_one_extra: bool) -> usize {
+    let mut count = 0;
+    let mut q = VecDeque::new();
+    q.push_back(State { visits: vec!["start"], visited_twice: false });
+
+    while let Some(state) = q.pop_front() {
+        if state.visits.last() == Some(&"end") {
+            count += 1;
+        } else {
+            if let Some(neighbors) = edges.get(state.visits.last().unwrap()) {
+                for &name in neighbors {
+                    if name.as_bytes()[0].is_ascii_uppercase() || !state.visits.contains(&name) {
+                        let mut new_visits = state.visits.clone();
+                        new_visits.push(name);
+                        let next_state = State {
+                            visits: new_visits,
+                            visited_twice: state.visited_twice
+                        };
+                        q.push_back(next_state);
+                    } else if allow_one_extra && !state.visited_twice {
+                        let mut new_visits = state.visits.clone();
+                        new_visits.push(name);
+                        let next_state = State {
+                            visits: new_visits,
+                            visited_twice: true
+                        };
+                        q.push_back(next_state);
+                    }
                 }
             }
         }
     }
-    paths
+    count
 }
 
 fn part1(graph: Graph<'_>) -> usize {
@@ -122,6 +136,6 @@ start-RW",
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone()), 3761);
-    assert_eq!(part2(input), 99138);
+    assert_eq!(part1(input.clone()), 4104);
+    assert_eq!(part2(input), 119760);
 }
