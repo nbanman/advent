@@ -1,73 +1,101 @@
 use advent::prelude::*;
 
-fn parse_input(input: &str) -> HashMap<Vector2, i64> {
-    parse_map(input, |c| match c {
-        c @ '0'..='9' => c as i64 - '0' as i64,
-        c => panic!("unexpected character `{c}`"),
-    })
+fn parse_input(input: &str) -> (Vec<u8>, isize) {
+    let grid: Vec<u8> = input
+        .as_bytes()
+        .iter()
+        .map(|c| {
+            if c != &b'\n' {
+                c - 48
+            } else {
+                u8::MAX
+            }
+        })
+        .collect();
+    let width = (grid.iter().position(|c| c == &u8::MAX).unwrap() + 1) as isize;
+    (grid, width)
 }
 
-fn default_input() -> HashMap<Vector2, i64> {
+fn default_input() -> (Vec<u8>, isize) {
     parse_input(include_input!(2021 / 11))
 }
 
-const CARDINALS: [Vector2; 8] = vectors!(
-    [0, 1],
-    [-1, 1],
-    [-1, 0],
-    [-1, -1],
-    [0, -1],
-    [1, -1],
-    [1, 0],
-    [1, 1],
-);
+fn flash(cave: &mut Vec<u8>, width: isize) -> usize {
 
-fn step(map: &mut HashMap<Vector2, i64>) -> usize {
-    // Increase all energy levels
-    for e in map.values_mut() {
-        *e += 1;
-    }
+    let vecs = vec![-width - 1, -width, -width + 1, -1, 1, width - 1, width, width + 1];
 
-    // Handle flashes
-    let mut q: VecDeque<_> = map.iter().filter_map(|(&p, &e)| (e > 9).some(p)).collect();
-    let mut flashed = HashSet::new();
-    while let Some(p) = q.pop_front() {
-        if flashed.contains(&p) {
-            continue;
+    for cell in cave.iter_mut() {
+        if cell != &u8::MAX {
+            *cell += 1;
         }
-        flashed.insert(p);
-        for d in CARDINALS {
-            let next = p + d;
-            if let Some(e) = map.get_mut(&next) {
-                *e += 1;
-                if *e > 9 {
-                    q.push_back(next)
+    }
+    loop {
+        let flasher_indices: Vec<_> = cave.iter().enumerate()
+            .filter_map(|(idx, &energy)| {
+                if energy != u8::MAX && energy > 9 {
+                    Some(idx)
+                } else {
+                    None
                 }
+            })
+            .collect();
+        if flasher_indices.is_empty() { break }
+
+        for &idx in flasher_indices.iter() {
+            if let Some(flasher) = cave.get_mut(idx) {
+                *flasher = 0
+            }
+        }
+
+        let neighbors: Vec<_> = flasher_indices.iter()
+            .flat_map(|idx| {
+                vecs.iter()
+                    .filter_map(|pos| {
+                        let neighbor_index = pos + idx.clone() as isize;
+                        cave
+                            .try_get(neighbor_index)
+                            .and_then(|neighbor_energy| if neighbor_energy == &u8::MAX {
+                                None
+                            } else {
+                                Some(neighbor_index as usize)
+                            })
+                    })
+            })
+            .filter(|&neighbor_index| {
+                if let Some(&neighbor_energy) = cave.get(neighbor_index) {
+                    if neighbor_energy != 0 { true } else { false }
+                } else {
+                    false
+                }
+            })
+            .collect();
+
+        // println!("neighbors: {:?}", neighbors);
+        for neighbor_index in neighbors {
+            if let Some(to_update) = cave.get_mut(neighbor_index) {
+                *to_update += 1;
             }
         }
     }
-
-    // Reset all energy levels
-    for e in map.values_mut() {
-        if *e > 9 {
-            *e = 0;
-        }
-    }
-
-    flashed.len()
+    cave.iter().filter(|&&energy| energy == 0).count()
 }
 
-fn part1(mut map: HashMap<Vector2, i64>) -> usize {
-    iter::repeat_with(|| step(&mut map)).take(100).sum()
+fn part1((mut cave, width): (Vec<u8>, isize)) -> usize {
+    iter::repeat_with(|| flash(&mut cave, width)).take(100).sum()
 }
 
-fn part2(mut map: HashMap<Vector2, i64>) -> usize {
-    let limit = map.len();
-    1 + iter::repeat_with(|| step(&mut map))
-        .position(|n| n == limit)
+fn part2((mut cave, width): (Vec<u8>, isize)) -> usize {
+    let cave_size = cave.len();
+    1 + iter::repeat_with(|| flash(&mut cave, width)).enumerate()
+        .find_or_first(|(idx, flashed)| {
+            if idx == &194 {
+                println!("At {idx}, flashed is {flashed} and cave size is {cave_size}");
+            };
+            flashed == &cave_size || idx == &194
+        })
         .unwrap()
+        .0
 }
-
 fn main() {
     let solution = advent::new(default_input).part(part1).part(part2).build();
     solution.cli()
@@ -95,6 +123,12 @@ fn example() {
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone()), 1793);
-    assert_eq!(part2(input), 247);
+    assert_eq!(part1(input.clone()), 1669);
+    assert_eq!(part2(input), 351);
 }
+
+// Part 1:                             (377.0 µs)
+// 1669
+//
+// Part 2:                             (1.335 ms)
+// 351
