@@ -1,77 +1,80 @@
 use advent::prelude::*;
 
-type Rules = HashMap<[char; 2], char>;
+type PropagationRules = HashMap<(u8, u8), ((u8, u8), (u8, u8))>;
+type ProteinPairs = HashMap<(u8, u8), usize>;
 
-fn parse_input(input: &str) -> (&str, Rules) {
+fn parse_input(input: &str) -> (PropagationRules, ProteinPairs, (u8, u8)) {
     let (template, rules) = input.split_once("\n\n").unwrap();
+    let template = template.as_bytes();
+    let edge_proteins = (template[0], template[template.len() - 1]);
 
-    let rules = rules
-        .lines()
-        .map(|line| {
-            let (left, right) = line.split_once(" -> ").unwrap();
-            let pair = left.chars().next_array().unwrap();
-            let insert = right.chars().next().unwrap();
-            (pair, insert)
-        })
+
+    let mut protein_pairs = ProteinPairs::new();
+    for pairs in template.windows(2) {
+        if let &[a, b] = pairs {
+            *protein_pairs.entry((a, b)).or_insert(0) += 1;
+        }
+    }
+
+    let rules = rules.as_bytes().into_iter()
+        .filter(|c| c.is_ascii_alphabetic())
+        .array_chunked()
+        .map(|[&a, &b, &c]| ((a, b), ((a, c), (c, b))))
         .collect();
 
-    (template, rules)
+    (rules, protein_pairs, edge_proteins)
 }
 
-fn default_input() -> (&'static str, Rules) {
+fn default_input() -> (PropagationRules, ProteinPairs, (u8, u8)) {
     parse_input(include_input!(2021 / 14))
 }
 
-fn solve(template: &str, rules: Rules, steps: usize) -> usize {
-    // Keep track of the count for each letter.
-    let mut letters = template.chars().fold(HashMap::new(), |mut acc, c| {
-        *acc.entry(c).or_insert(0) += 1;
-        acc
-    });
-
-    // Keep track of the count for each pair of letters.
-    let mut pairs = template
-        .chars()
-        .array_windows()
-        .fold(HashMap::new(), |mut acc, pair| {
-            *acc.entry(pair).or_insert(0) += 1;
-            acc
-        });
-
-    for _ in 0..steps {
-        // For every pair if there is a rule that applies to that pair then
-        // split the pair AB into AC and CB keeping the count for both of them.
-        pairs = pairs
-            .into_iter()
-            .flat_map(|([a, b], n)| {
-                match rules.get(&[a, b]) {
-                    Some(&i) => {
-                        // Keep track of the letters here so we don't have to
-                        // try and calculate it later.
-                        *letters.entry(i).or_default() += n;
-                        Either::Left([([a, i], n), ([i, b], n)])
-                    }
-                    None => Either::Right([([a, b], n)]),
-                }
-                .into_iter()
-            })
-            .fold(HashMap::new(), |mut acc, (pair, count)| {
-                *acc.entry(pair).or_default() += count;
-                acc
-            });
-    }
-
-    let min = letters.values().min().unwrap();
-    let max = letters.values().max().unwrap();
+fn solve(
+    (progagation_rules, protein_pairs, edge_proteins): (PropagationRules, ProteinPairs, (u8, u8)),
+    steps: usize
+) -> usize {
+    let polymerized = polymerize(protein_pairs, steps, &progagation_rules);
+    let count = count_proteins(polymerized, edge_proteins);
+    let (min, max) = min_max(&count);
     max - min
 }
 
-fn part1((template, rules): (&str, Rules)) -> usize {
-    solve(template, rules, 10)
+fn polymerize(
+    protein_pairs: ProteinPairs, steps: usize, propagation_rules: &PropagationRules
+) -> ProteinPairs {
+    if steps == 0 {
+        protein_pairs
+    } else {
+        let mut new_pairs = ProteinPairs::new();
+        for (protein, amt) in protein_pairs {
+            let &(a, b) = propagation_rules.get(&protein).unwrap();
+            *new_pairs.entry(a).or_insert(0) += amt;
+            *new_pairs.entry(b).or_insert(0) += amt;
+        }
+        polymerize(new_pairs, steps - 1, propagation_rules)
+    }
 }
 
-fn part2((template, rules): (&str, Rules)) -> usize {
-    solve(template, rules, 40)
+fn count_proteins(protein_pairs: ProteinPairs, edge_proteins: (u8, u8)) -> Vec<usize> {
+    let mut double_counts = HashMap::new();
+    for ((a, b), amt) in protein_pairs {
+        *double_counts.entry(a).or_insert(0usize) += amt;
+        *double_counts.entry(b).or_insert(0) += amt;
+    }
+    *double_counts.entry(edge_proteins.0).or_insert(0) += 1;
+    *double_counts.entry(edge_proteins.1).or_insert(0) += 1;
+
+    double_counts.values()
+        .map(|it| it / 2)
+        .collect()
+}
+
+fn part1(input: (PropagationRules, ProteinPairs, (u8, u8))) -> usize {
+    solve(input, 10)
+}
+
+fn part2(input: (PropagationRules, ProteinPairs, (u8, u8))) -> usize {
+    solve(input, 40)
 }
 
 fn main() {
@@ -109,6 +112,6 @@ CN -> C",
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone()), 2937);
-    assert_eq!(part2(input), 3390034818249);
+    assert_eq!(part1(input.clone()), 3555);
+    assert_eq!(part2(input), 4439442043739);
 }
