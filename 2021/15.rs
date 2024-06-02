@@ -16,13 +16,13 @@ fn default_input() -> (Vec<u8>, usize) {
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 struct State {
-    id: usize,
-    weight: usize,
-    h: usize,
+    id: isize,
+    weight: isize,
+    h: isize,
 }
 impl State
 {
-    fn f(&self) -> usize {
+    fn f(&self) -> isize {
         self.h + self.weight
     }
 }
@@ -41,17 +41,17 @@ impl PartialOrd for State {
 
 
 fn solve(cavern: Vec<u8>, width: usize) -> Option<usize> {
-    let end_pos = cavern.len() - 1;
-
-    let heuristic = |pos: usize| -> usize {
-        let x1 = (pos % width) as isize;
-        let y1 = (pos / width) as isize;
-        let x2 = (end_pos % width) as isize;
-        let y2 = (end_pos / width) as isize;
-        ((x1 - x2).abs() + (y1 - y2).abs()) as usize
-    };
+    let end_pos = cavern.len() as isize - 1;
 
     let width = width as isize;
+
+    let heuristic = |pos: isize| -> isize {
+        let x1 = pos % width;
+        let y1 = pos / width;
+        let x2 = end_pos % width;
+        let y2 = end_pos / width;
+        (x1 - x2).abs() + (y1 - y2).abs()
+    };
 
     let directions = vec![-width, width, -1, 1];
 
@@ -67,20 +67,36 @@ fn solve(cavern: Vec<u8>, width: usize) -> Option<usize> {
     let mut closed = vec![false; cavern.len()];
 
     while let Some(current) = open.pop() {
-        if closed[current.id] == true { continue } else { closed[current.id] = true }
-        if current.id == end_pos { return Some(current.weight) }
+        if closed[current.id as usize] == true { continue } else { closed[current.id as usize] = true }
+        if current.id == end_pos { return Some(current.weight as usize) }
 
         // get edges
         let edges = directions.iter()
-            .filter_map(|&direction| {
-                let pos = current.id;// as isize;
-                pos.checked_add(direction as usize).map(|pos| pos as usize)
+            .enumerate()
+            .filter_map(|(idx, &direction)| {
+                let pos = current.id + direction;
+                if pos < 0 || pos >= cavern.len() as isize {
+                    None
+                } else {
+                    // horrific kludge because I got rid of line breaks and thus don't know when
+                    // something has gone out of range on the x-axis. So I get the value of pos on
+                    // the x-axis. If going left puts me at the far right, or going right puts me
+                    // at the far left, I return None to filter it out.
+                    let x = pos % width;
+                    if idx == 2 && x == width - 1 {
+                        None
+                    } else if idx == 3 && x == 0 {
+                        None
+                    } else {
+                        Some(pos)
+                    }
+                }
             })
-            .filter(|&new_pos| new_pos < cavern.len() && !closed[new_pos])
+            .filter(|&new_pos| !closed[new_pos as usize])
             .map(|new_pos| {
                 State {
                     id: new_pos,
-                    weight: *cavern.get(new_pos).unwrap() as usize + current.weight,
+                    weight: *cavern.get(new_pos as usize).unwrap() as isize + current.weight,
                     h: heuristic(new_pos),
                 }
             });
