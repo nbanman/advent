@@ -1,46 +1,54 @@
+use std::ops::RangeInclusive;
 use advent::prelude::*;
 
-fn parse_input(s: &str) -> Vec<Element<'_>> {
-    regex!(r"(?P<lower>\d+)-(?P<upper>\d+)\s(?P<letter>.):\s(?P<password>.*)")
-        .captures_iter(s)
-        .map(|caps| Element {
-            lower: caps["lower"].parse().unwrap(),
-            upper: caps["upper"].parse().unwrap(),
-            letter: caps["letter"].parse().unwrap(),
-            password: caps.name("password").unwrap().as_str(),
+#[derive(Clone)]
+struct PassPolicy<'a> {
+    letter: u8,
+    range: RangeInclusive<usize>,
+    password: &'a [u8],
+}
+
+impl PassPolicy<'_> {
+    fn is_valid_old(&self) -> bool {
+        self.range.contains(&self.password.iter().filter(|&&c| c == self.letter).count())
+    }
+
+    fn is_valid_new(&self) -> bool {
+        let start = self.password[self.range.start() - 1] == self.letter;
+        let end = self.password[self.range.end() - 1] == self.letter;
+        start ^ end
+    }
+}
+
+fn parse_input(s: &str) -> Vec<PassPolicy<'_>> {
+    s.lines()
+        .map(|line| {
+            let (lower, remainder) = line.split_once(['-', ' ']).unwrap();
+            let (upper, remainder) = remainder.split_once(['-', ' ']).unwrap();
+            let (letter, password) = remainder.split_once(['-', ' ']).unwrap();
+            let lower = lower.parse().unwrap();
+            let upper = upper.parse().unwrap();
+            let range = lower..=upper;
+            let letter = letter.as_bytes()[0];
+            let password = password.as_bytes();
+            PassPolicy { letter, range, password }
         })
         .collect()
 }
 
-fn default_input() -> Vec<Element<'static>> {
+fn default_input() -> Vec<PassPolicy<'static>> {
     parse_input(include_input!(2020 / 02))
 }
 
-#[derive(Debug, Clone)]
-struct Element<'a> {
-    lower: usize,
-    upper: usize,
-    letter: char,
-    password: &'a str,
-}
-
-fn part1(elements: Vec<Element<'_>>) -> usize {
-    elements
-        .into_iter()
-        .filter(|e| {
-            let freq = e.password.chars().filter(|&c| c == e.letter).count();
-            (e.lower..=e.upper).contains(&freq)
-        })
+fn part1(policies: Vec<PassPolicy<'_>>) -> usize {
+    policies.into_iter()
+        .filter(|policy| policy.is_valid_old())
         .count()
 }
 
-fn part2(elements: Vec<Element<'_>>) -> usize {
-    elements
-        .into_iter()
-        .filter(|e| {
-            (e.password.chars().nth(e.lower - 1).unwrap() == e.letter)
-                ^ (e.password.chars().nth(e.upper - 1).unwrap() == e.letter)
-        })
+fn part2(policies: Vec<PassPolicy<'_>>) -> usize {
+    policies.into_iter()
+        .filter(|policy| policy.is_valid_new())
         .count()
 }
 
@@ -63,6 +71,6 @@ fn example() {
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone()), 383);
-    assert_eq!(part2(input), 272);
+    assert_eq!(part1(input.clone()), 445);
+    assert_eq!(part2(input), 491);
 }
