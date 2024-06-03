@@ -1,34 +1,47 @@
+use std::ops::Mul;
 use advent::prelude::*;
 
-fn default_input() -> HashSet<Vector2> {
-    parse_map_set(include_input!(2020 / 03))
+fn parse_input(s: &str) -> (Vec<bool>, usize) {
+    let map = s.as_bytes();
+    let width = map.iter().position(|c| c == &b'\n').unwrap();
+    let map = map
+        .iter()
+        .filter_map(|&c| {
+            match c {
+                b'.' => Some(false),
+                b'#' => Some(true),
+                _ => None,
+            }
+        })
+        .collect();
+    (map, width)
 }
 
-fn count_trees(map: &HashSet<Vector2>, slope: Vector2) -> usize {
-    let len_x = map.iter().map(|v| v.x).max().unwrap() + 1;
-    let len_y = map.iter().map(|v| v.y).max().unwrap() + 1;
-    let mut trees = 0;
-    let mut p = Vector2::zero();
-    while p.y < len_y {
-        if map.contains(&p) {
-            trees += 1;
+fn default_input() -> (Vec<bool>, usize) {
+    parse_input(include_input!(2020 / 03))
+}
+
+fn solve(map: &Vec<bool>, width: usize, right: usize, down: usize) -> usize {
+    let height = map.len() / width;
+    (down..height).step_by(down).enumerate().fold(0, |acc, (idx, y)| {
+        let x = ((idx + 1 ) * right) % width;
+        if let Some(value) = map.get(y * width + x) {
+            let modifier = if *value { 1 } else { 0 };
+            acc + modifier
+        } else {
+            acc
         }
-        p += slope;
-        p.x %= len_x;
-    }
-    trees
+    })
 }
 
-fn part1(map: HashSet<Vector2>) -> usize {
-    count_trees(&map, vector![3, 1])
+fn part1((map, width): (Vec<bool>, usize)) -> usize {
+    solve(&map, width, 3, 1)
 }
 
-fn part2(map: HashSet<Vector2>) -> usize {
-    [[1, 1], [3, 1], [5, 1], [7, 1], [1, 2]]
-        .into_iter()
-        .map(Vector2::from)
-        .map(|slope| count_trees(&map, slope))
-        .product()
+fn part2((map, width): (Vec<bool>, usize)) -> usize {
+    [(1, 1), (3, 1), (5, 1), (7, 1), (1, 2)].into_iter()
+        .map(|(right, down)| solve(&map, width, right, down))
+        .fold(1, usize::mul)
 }
 
 fn main() {
@@ -38,8 +51,7 @@ fn main() {
 
 #[test]
 fn example() {
-    let input = parse_map_set(
-        "\
+    let input = parse_input("\
 ..##.......
 #...#...#..
 .#....#..#.
@@ -50,8 +62,7 @@ fn example() {
 .#........#
 #.##...#...
 #...##....#
-.#..#...#.#",
-    );
+.#..#...#.#");
     assert_eq!(part1(input.clone()), 7);
     assert_eq!(part2(input), 336);
 }
@@ -59,6 +70,6 @@ fn example() {
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone()), 282);
-    assert_eq!(part2(input), 958815792);
+    assert_eq!(part1(input.clone()), 294);
+    assert_eq!(part2(input), 5774564250);
 }
