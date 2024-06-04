@@ -1,31 +1,104 @@
 use advent::prelude::*;
+use crate::PassportField::{Byr, Cid, Ecl, Eyr, Hcl, Hgt, Iyr, Pid};
 
-fn parse_input(input: &str) -> Vec<String> {
+#[derive(Clone, Debug)]
+enum PassportField {
+    Byr { info: String },
+    Iyr { info: String },
+    Eyr { info: String },
+    Hgt { info: String },
+    Hcl { info: String },
+    Ecl { info: String },
+    Pid { info: String },
+    Cid,
+}
+
+impl PassportField {
+
+    fn new(field: &str, info: &str) -> PassportField {
+        let info = String::from(info);
+        match field {
+            "byr" => Byr { info },
+            "iyr" => Iyr { info },
+            "eyr" => Eyr { info },
+            "hgt" => Hgt { info },
+            "hcl" => Hcl { info },
+            "ecl" => Ecl { info },
+            "pid" => Pid { info },
+            _ => Cid,
+        }
+    }
+    fn is_valid(&self) -> bool {
+        match self {
+            Byr { info } => {
+                (1920usize..=2002).contains(&info.parse::<usize>().unwrap())
+            }
+            Iyr { info } => {
+                (2010usize..=2020).contains(&info.parse::<usize>().unwrap())
+            }
+            Eyr { info } => {
+                (2020usize..=2030).contains(&info.parse::<usize>().unwrap())
+            }
+            Hgt { info } => {
+                info[..info.len() - 2]
+                    .parse::<usize>()
+                    .map_or(false, |amt| {
+                        if &info[info.len() - 2..] == "cm" {
+                            (150..=193).contains(&amt)
+                        } else {
+                            (59..=76).contains(&amt)
+                        }
+                    })
+            }
+            Hcl { info } => {
+                let rx = regex!(r"#[a-f\d]{6}");
+                rx.is_match(info)
+            }
+            Ecl { info } => {
+                let rx = regex!(r"amb|blu|brn|gry|grn|hzl|oth");
+                rx.is_match(info)
+            }
+            Pid { info } => {
+                info.len() == 9 && info.as_bytes().iter().all(|c| c.is_ascii_digit())
+            }
+            Cid => { true }
+        }
+    }
+}
+
+fn parse_input(input: &str) -> Vec<Vec<PassportField>> {
+    let rx = regex!(r"([a-z]{3}):([^ \r\n]+)");
     input
         .split("\n\n")
-        .map(|s| s.split_whitespace().sorted().join(" "))
+        .map(|passport| {
+            rx.captures_iter(passport)
+                .map(|cap| {
+                    let field = &cap[1];
+                    let info = &cap[2];
+                    PassportField::new(field, info)
+                })
+                .filter(|field| {
+                    if let &Cid = field { false } else { true }
+                })
+                .collect()
+        })
+        .filter(|passport: &Vec<_>| passport.len() == 7)
         .collect()
 }
 
-fn default_input() -> Vec<String> {
+fn default_input() -> Vec<Vec<PassportField>> {
     parse_input(include_input!(2020 / 04))
 }
 
-fn part1(input: Vec<String>) -> usize {
-    let re = regex!(r"^byr:\S+ (cid:\S+ )?ecl:\S+ eyr:\S+ hcl:\S+ hgt:\S+ iyr:\S+ pid:\S+$");
-    input
-        .into_iter()
-        .filter(|passport| re.is_match(passport))
-        .count()
+fn part1(passports: Vec<Vec<PassportField>>) -> usize {
+    passports.len()
 }
 
-fn part2(input: Vec<String>) -> usize {
-    let re = regex!(
-        r"^byr:(19[2-9][0-9]|200[0-2]) (cid:\S+ )?ecl:(amb|blu|brn|gry|grn|hzl|oth) eyr:(202[0-9]|2030) hcl:#[0-9a-f]{6} hgt:((1[5-8][0-9]|19[0-3])cm|(59|6[0-9]|7[0-6])in) iyr:(201[0-9]|2020) pid:\d{9}$"
-    );
-    input
-        .into_iter()
-        .filter(|passport| re.is_match(passport))
+fn part2(passports: Vec<Vec<PassportField>>) -> usize {
+    passports.into_iter()
+        .filter(|passport| {
+            passport.iter().all(|field| field.is_valid())
+        })
         .count()
 }
 
@@ -99,6 +172,6 @@ iyr:2010 hgt:158cm hcl:#b6652a ecl:blu byr:1944 eyr:2021 pid:093154719"#,
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone()), 182);
-    assert_eq!(part2(input), 109);
+    assert_eq!(part1(input.clone()), 242);
+    assert_eq!(part2(input), 186);
 }
