@@ -1,41 +1,36 @@
 use advent::prelude::*;
 
-fn parse_input(input: &str) -> Vec<i64> {
+fn parse_input(input: &str) -> Vec<u64> {
     input
         .lines()
         .map(|line| {
-            let as_binary: String = line
-                .chars()
-                .map(|c| match c {
-                    'F' | 'L' => '0',
-                    'B' | 'R' => '1',
-                    c => panic!("invalid character `{c}`"),
+            line.as_bytes().iter().enumerate()
+                .fold(0, |acc, (index, c)| {
+                    acc + if c == &b'B' || c == &b'R' {
+                        1 << (9 - index)
+                    } else {
+                        0
+                    }
                 })
-                .collect();
-            assert_eq!(as_binary.len(), 10);
-            let row = i64::from_str_radix(&as_binary[..7], 2).unwrap();
-            let col = i64::from_str_radix(&as_binary[7..], 2).unwrap();
-            row * 8 + col
         })
+        .sorted()
         .collect()
 }
 
-fn default_input() -> Vec<i64> {
+fn default_input() -> Vec<u64> {
     parse_input(include_input!(2020 / 05))
 }
 
-fn part1(ids: Vec<i64>) -> i64 {
-    ids.into_iter().max().unwrap()
+fn part1(ids: Vec<u64>) -> u64 {
+    *ids.last().unwrap()
 }
 
-fn part2(mut ids: Vec<i64>) -> i64 {
-    ids.sort_unstable();
-    for [curr, next] in ids.into_iter().array_windows() {
-        if next - curr > 1 {
-            return next - 1;
-        }
-    }
-    unreachable!()
+fn part2(ids: Vec<u64>) -> u64 {
+    ids.iter()
+        .tuple_windows()
+        .find(|(&prev, &next)| prev + 1 != next)
+        .unwrap()
+        .0 + 1
 }
 
 fn main() {
@@ -57,6 +52,6 @@ BBFFBBFRLL",
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone()), 883);
-    assert_eq!(part2(input), 532);
+    assert_eq!(part1(input.clone()), 922);
+    assert_eq!(part2(input), 747);
 }
