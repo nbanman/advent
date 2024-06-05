@@ -1,22 +1,23 @@
 use advent::prelude::*;
 
-type Bags<'a> = HashMap<&'a str, Vec<(&'a str, i64)>>;
+type Bags<'a> = HashMap<&'a str, Vec<(&'a str, usize)>>;
 
 fn parse_input(input: &str) -> Bags<'_> {
-    regex!(r"(?P<color>\w+ \w+) bags contain (?P<contents>.*)\.")
+    let bag_rx = regex!(r"(?P<amount>\d+) (?P<bag>\w+ \w+) bag");
+
+    regex!(r"(?P<container>\w+ \w+) bags contain (?P<contained>[^.]+)\.")
         .captures_iter(input)
         .map(|caps| {
-            let bag = caps.name("color").unwrap().as_str();
-            let contents = caps.name("contents").unwrap().as_str();
-            let contents = regex!(r"(?P<count>\d+) (?P<color>\w+ \w+) bags?")
-                .captures_iter(contents)
-                .map(|captures| {
-                    let count = captures.name("count").unwrap().as_str().parse().unwrap();
-                    let bag = captures.name("color").unwrap().as_str();
-                    (bag, count)
+            let container = caps.name("container").unwrap().as_str();
+            let contained = caps.name("contained").unwrap().as_str();
+            let held_bags: Vec<_> = bag_rx.captures_iter(contained)
+                .map(|contained_caps| {
+                    let amount: usize = contained_caps.name("amount").unwrap().as_str().parse().unwrap();
+                    let bag = contained_caps.name("bag").unwrap().as_str();
+                    (bag, amount)
                 })
                 .collect();
-            (bag, contents)
+            (container, held_bags)
         })
         .collect()
 }
@@ -25,25 +26,37 @@ fn default_input() -> Bags<'static> {
     parse_input(include_input!(2020 / 07))
 }
 
-fn contains(bags: &Bags<'_>, bag: &str) -> bool {
-    bags[bag]
-        .iter()
-        .any(|&(b, _)| b == "shiny gold" || contains(bags, b))
-}
 
-fn count(bags: &Bags<'_>, bag: &str) -> i64 {
-    bags[bag]
-        .iter()
-        .map(|(b, i)| i * (1 + count(bags, b)))
-        .sum()
-}
 
 fn part1(bags: Bags<'_>) -> usize {
-    bags.keys().filter(|b| contains(&bags, b)).count()
+    bags.keys()
+        .filter(|&&bag| contains_gold(bag, &bags))
+        .count() - 1
 }
 
-fn part2(bags: Bags<'_>) -> i64 {
-    count(&bags, "shiny gold")
+fn contains_gold(bag: &str, bags: &Bags<'_>) -> bool {
+    let mut visited = HashSet::new();
+    let mut q = VecDeque::new();
+    q.push_back(bag);
+    while let Some(next_bag) = q.pop_front() {
+        if next_bag == "shiny gold" { return true }
+        visited.insert(next_bag);
+        bags[next_bag].iter()
+            .filter(|(held_bag, _)| !visited.contains(held_bag))
+            .for_each(|(held_bag, _)| q.push_back(held_bag));
+    }
+    false
+}
+
+fn part2(bags: Bags<'_>) -> usize {
+    bags_inside(&bags, "shiny gold")
+}
+
+fn bags_inside(bags: &Bags<'_>, bag: &str) -> usize {
+    bags[bag]
+        .iter()
+        .map(|(held_bag, amt)| amt * (1 + bags_inside(bags, held_bag)))
+        .sum()
 }
 
 fn main() {
@@ -88,6 +101,6 @@ dark violet bags contain no other bags.
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone()), 101);
-    assert_eq!(part2(input), 108636);
+    assert_eq!(part1(input.clone()), 252);
+    assert_eq!(part2(input), 35487);
 }
