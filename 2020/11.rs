@@ -1,117 +1,148 @@
 use advent::prelude::*;
+use crate::Seat::{EmptySpace, Occupied, Unoccupied};
 
-type Grid = HashMap<Vector2, Tile>;
-type Visible = HashMap<Vector2, Vec<Vector2>>;
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum Seat {
+    Occupied,
+    Unoccupied,
+    EmptySpace,
+}
+
+impl Seat {
+    fn from(c: u8) -> Seat {
+        match c {
+            b'#' => Occupied,
+            b'L' => Unoccupied,
+            b'.' => EmptySpace,
+            c    => panic!("Input contains unrecognized char: {}", c as char)
+        }
+    }
+}
+type Grid = (Vec<Seat>, usize);
 
 fn parse_input(input: &str) -> Grid {
-    parse_map(input, |c| match c {
-        '.' => Tile::Floor,
-        'L' => Tile::EmptySeat,
-        '#' => Tile::OccupiedSeat,
-        c => panic!("unexpected character `{c}`"),
-    })
+    let input = input.as_bytes();
+    let width = input.iter().position(|c| c == &b'\n').unwrap();
+    let layout = input
+        .iter()
+        .filter(|&&c| c != b'\n')
+        .map(|&c| Seat::from(c))
+        .collect();
+    (layout, width)
 }
 
 fn default_input() -> Grid {
     parse_input(include_input!(2020 / 11))
 }
 
-const DIRECTIONS: [Vector2; 8] = vectors!(
-    [-1, -1],
-    [-1, 0],
-    [-1, 1],
-    [0, -1],
-    [0, 1],
-    [1, -1],
-    [1, 0],
-    [1, 1],
-);
+const DIRECTIONS: [(isize, isize); 8] = [
+    (-1, -1),
+    (-1, 0),
+    (-1, 1),
+    (0, -1),
+    (0, 1),
+    (1, -1),
+    (1, 0),
+    (1, 1),
+];
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-enum Tile {
-    Floor,
-    EmptySeat,
-    OccupiedSeat,
-}
-
-impl Tile {
-    fn is_occupied(&self) -> bool {
-        matches!(*self, Tile::OccupiedSeat)
-    }
-}
-
-/// Builds a visibility map from the grid.
-fn visibility(grid: &Grid) -> Visible {
-    let mut visible = HashMap::new();
-    for k in grid.keys() {
-        for direction in &DIRECTIONS {
-            let mut p = k + direction;
-            while let Some(tile) = grid.get(&p) {
-                match tile {
-                    Tile::Floor => p += direction,
-                    _ => {
-                        visible.entry(*k).or_insert_with(Vec::new).push(p);
-                        break;
+fn solve<F>(grid: Grid, tolerance: usize, get_neighbors: F) -> usize
+where
+    F: Fn(&Grid, usize) -> usize,
+{
+    let (new_grid, _) = iter::successors(Some(grid), |acc| {
+        let layout = acc.0
+            .iter()
+            .enumerate()
+            .map(|(idx, &seat)| {
+                if matches!(seat, EmptySpace) {
+                    EmptySpace
+                } else {
+                    let is_occupied = matches!(seat, Occupied);
+                    let neighbors = get_neighbors(acc, idx);
+                    if is_occupied && neighbors < tolerance || !is_occupied && neighbors == 0 {
+                        Occupied
+                    } else {
+                        Unoccupied
                     }
                 }
-            }
-        }
-    }
-    visible
-}
+            })
+            .collect();
+        Some((layout, acc.1))
+    })
+        .tuple_windows()
+        .find(|(prev, next)| prev == next)
+        .unwrap();
 
-/// Returns the number of adjacent occupied seats.
-fn adjacent_occupied(grid: &Grid, p: Vector2) -> usize {
-    DIRECTIONS
-        .iter()
-        .filter_map(|d| grid.get(&(p + d)))
-        .filter(|t| t.is_occupied())
-        .count()
-}
-
-/// Returns the number of visible occupied seats.
-fn visible_occupied(grid: &Grid, vis: &Visible, p: Vector2) -> usize {
-    vis[&p]
-        .iter()
-        .map(|p| &grid[p])
-        .filter(|t| t.is_occupied())
-        .count()
-}
-
-fn solve<F>(mut grid: Grid, f: F) -> usize
-where
-    F: Fn(&Grid, Vector2, Tile) -> (Vector2, Tile) + Copy,
-{
-    loop {
-        let next = grid.iter().map(|(&p, &t)| f(&grid, p, t)).collect();
-        if grid == next {
-            break grid.values().filter(|t| t.is_occupied()).count();
-        }
-        grid = next;
-    }
+    new_grid.0.iter().filter(|seat| matches!(seat, Occupied)).count()
 }
 
 fn part1(grid: Grid) -> usize {
-    solve(grid, |grid, p, t| {
-        let t = match t {
-            Tile::EmptySeat if adjacent_occupied(grid, p) == 0 => Tile::OccupiedSeat,
-            Tile::OccupiedSeat if adjacent_occupied(grid, p) >= 4 => Tile::EmptySeat,
-            t => t,
-        };
-        (p, t)
-    })
+    let get_neighbors = |grid: &Grid, idx: usize| {
+        let width = grid.1 as isize;
+        let height = grid.0.len() as isize / width;
+        let x = idx as isize % width;
+        let y = idx as isize / width;
+        DIRECTIONS
+            .iter()
+            .filter_map(|(dx, dy)| {
+                let new_x = *dx + x;
+                if new_x >= 0 && new_x < width {
+                    let new_y = *dy + y;
+                    if new_y >= 0 && new_y < height {
+                        let pos = new_y * width + new_x;
+                        Some(pos)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            })
+            .filter(|pos| matches!(grid.0[*pos as usize], Occupied))
+            .count()
+    };
+    solve(grid, 4, get_neighbors)
 }
 
 fn part2(grid: Grid) -> usize {
-    let vis = visibility(&grid);
-    solve(grid, |grid, p, t| {
-        let t = match t {
-            Tile::EmptySeat if visible_occupied(grid, &vis, p) == 0 => Tile::OccupiedSeat,
-            Tile::OccupiedSeat if visible_occupied(grid, &vis, p) >= 5 => Tile::EmptySeat,
-            t => t,
-        };
-        (p, t)
-    })
+    let get_neighbors = |grid: &Grid, idx: usize| {
+        let width = grid.1 as isize;
+        let height = grid.0.len() as isize / width;
+        let x = idx as isize % width;
+        let y = idx as isize / width;
+        let count = DIRECTIONS
+            .iter()
+            .filter(|(slope_x, slope_y)| {
+                let successors: Vec<_> = iter::successors(Some((x, y)), |(dx, dy)| {
+                    let new_x = *dx + slope_x;
+                    if new_x >= 0 && new_x < width {
+                        let new_y = *dy + slope_y;
+                        if new_y >= 0 && new_y < height {
+                            let pos = (new_y * width + new_x) as usize;
+                            if matches!(grid.0[pos], Unoccupied) {
+                                None
+                            } else {
+                                Some((new_x, new_y))
+                            }
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                })
+                    .map(|(new_x, new_y)| {
+                        let pos = (new_y * width + new_x) as usize;
+                        grid.0[pos]
+                    })
+                    .collect();
+                successors.into_iter().dropping(1).any(|seat| matches!(seat, Occupied))
+            })
+            .count();
+        count
+    };
+    solve(grid, 5, get_neighbors)
 }
 
 fn main() {
@@ -122,8 +153,7 @@ fn main() {
 #[test]
 fn example() {
     let input = parse_input(
-        "
-L.LL.LL.LL
+        "L.LL.LL.LL
 LLLLLLL.LL
 L.L.L..L..
 LLLL.LL.LL
@@ -141,6 +171,6 @@ L.LLLLL.LL",
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone()), 2254);
-    assert_eq!(part2(input), 2004);
+    assert_eq!(part1(input.clone()), 2243);
+    assert_eq!(part2(input), 2027);
 }
