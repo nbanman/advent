@@ -2,18 +2,9 @@ use advent::prelude::*;
 
 fn parse_input(input: &str) -> Vec<(Vector2, Vector2)> {
     input
-        .lines()
-        .map(|line| {
-            let mut it = line.split(" -> ").map(|s| {
-                s.split(',')
-                    .map(str::parse)
-                    .map(Result::unwrap)
-                    .next_array::<2>()
-                    .map(Vector2::from)
-                    .unwrap()
-            });
-            (it.next().unwrap(), it.next().unwrap())
-        })
+        .get_numbers()
+        .array_chunked()
+        .map(|[x1, y1, x2, y2]| (vector![x1, y1], vector![x2, y2]))
         .collect()
 }
 
@@ -21,31 +12,56 @@ fn default_input() -> Vec<(Vector2, Vector2)> {
     parse_input(include_input!(2021 / 05))
 }
 
-fn solve(input: impl Iterator<Item = (Vector2, Vector2)>) -> usize {
+fn straight_range(
+    (a, b): (Vector2, Vector2), include_diagonals: bool
+) -> Vec<Vector2> {
+    let mut range = Vec::new();
+    if a.x == b.x {
+        let (&small, &large) = min_max(&[a.y, b.y]);
+        for y in small..=large {
+            range.push(vector![a.x, y]);
+        }
+    } else if a.y == b.y {
+        let (&small, &large) = min_max(&[a.x, b.x]);
+        for x in small..=large {
+            range.push(vector![x, a.y]);
+        }
+    } else if include_diagonals {
+        let y_increment = if a.y < b.y {
+            1i64
+        } else {
+            -1i64
+        };
+        if a.x < b.x {
+            for (idx, x) in (a.x..=b.x).enumerate() {
+                range.push(vector!(x, a.y + idx as i64 * y_increment))
+            }
+        } else {
+            for (idx, x) in (b.x..=a.x).rev().enumerate() {
+                range.push(vector!(x, a.y + idx as i64 * y_increment))
+            }
+        };
+    }
+    range
+}
+
+fn solve(input: impl Iterator<Item = (Vector2, Vector2)>, include_diagonals: bool) -> usize {
+    let mut counter: HashMap<Vector2, usize> = HashMap::new();
     input
-        .flat_map(|(p1, p2)| {
-            let d = (p2 - p1).map(i64::signum);
-            iter::successors(Some(p1), move |&p| (p != p2).then(|| p + d))
-        })
-        .fold(HashMap::new(), |mut map, p| {
-            *map.entry(p).or_insert(0) += 1;
-            map
-        })
-        .into_values()
-        .filter(|&count| count >= 2)
-        .count()
+        .flat_map(|line| straight_range(line, include_diagonals))
+        .for_each(|pos| {
+            let current = counter.get(&pos).unwrap_or(&0) + 1;
+            counter.insert(pos, current);
+        });
+    counter.values().filter(|&v| v > &1).count()
 }
 
 fn part1(input: Vec<(Vector2, Vector2)>) -> usize {
-    solve(
-        input
-            .into_iter()
-            .filter(|(p1, p2)| p1.x == p2.x || p1.y == p2.y),
-    )
+    solve(input.into_iter(), false)
 }
 
 fn part2(input: Vec<(Vector2, Vector2)>) -> usize {
-    solve(input.into_iter())
+    solve(input.into_iter(), true)
 }
 
 fn main() {
@@ -75,6 +91,6 @@ fn example() {
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone()), 7269);
-    assert_eq!(part2(input), 21140);
+    assert_eq!(part1(input.clone()), 5774);
+    assert_eq!(part2(input), 18423);
 }
