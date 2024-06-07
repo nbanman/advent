@@ -1,30 +1,28 @@
 use advent::prelude::*;
 
 fn parse_input(input: &str) -> Vec<i64> {
-    input
-        .split_whitespace()
-        .map(str::parse)
-        .map(Result::unwrap)
-        .collect()
+    get_numbers(input)
 }
 
 fn default_input() -> Vec<i64> {
     parse_input(include_input!(2018 / 01))
 }
 
-fn part1(input: Vec<i64>) -> i64 {
-    input.into_iter().sum()
+fn part1(changes: Vec<i64>) -> i64 {
+    changes.into_iter().sum()
 }
 
-fn part2(input: Vec<i64>) -> i64 {
+fn part2(changes: Vec<i64>) -> i64 {
     let mut cache = HashSet::from_iter([0]);
-    let mut sum = 0;
-    input
+    changes
         .into_iter()
         .cycle()
-        .find_map(|i| {
-            sum += i;
-            cache.replace(sum)
+        .scan(0, |state, x| {
+            *state += x;
+            Some(*state)
+        })
+        .find(|&x| {
+            !cache.insert(x)
         })
         .unwrap()
 }
@@ -56,6 +54,6 @@ fn example2() {
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone()), 466);
-    assert_eq!(part2(input), 750);
+    assert_eq!(part1(input.clone()), 433);
+    assert_eq!(part2(input), 256);
 }
