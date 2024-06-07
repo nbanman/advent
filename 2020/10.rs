@@ -1,44 +1,45 @@
+use std::ops::Mul;
 use advent::prelude::*;
 
-fn parse_input(input: &str) -> Vec<i64> {
-    let mut j: Vec<_> = input
-        .split_whitespace()
-        .map(str::parse)
-        .map(Result::unwrap)
+fn parse_input(input: &str) -> Vec<usize> {
+    let mut joltage_differences: VecDeque<_> = input
+        .get_numbers()
+        .sorted()
         .collect();
-    j.insert(0, 0);
-    j.sort_unstable();
-    j.push(j.last().unwrap() + 3);
-    j
+    joltage_differences.push_front(0);
+    joltage_differences.push_back(joltage_differences.iter().last().unwrap() + 3);
+    joltage_differences
+        .into_iter()
+        .tuple_windows()
+        .map(|(a, b)| b - a)
+        .collect()
 }
 
-fn default_input() -> Vec<i64> {
+fn default_input() -> Vec<usize> {
     parse_input(include_input!(2020 / 10))
 }
 
-fn part1(joltages: Vec<i64>) -> i64 {
-    let mut ones = 0;
-    let mut threes = 0;
-    for [curr, next] in joltages.iter().array_windows() {
-        match next - curr {
-            1 => ones += 1,
-            3 => threes += 1,
-            _ => {}
-        }
-    }
-    ones * threes
+fn part1(joltage_differences: Vec<usize>) -> usize {
+    let jolt3s = joltage_differences
+        .iter()
+        .filter(|&jolt_diff| jolt_diff == &3)
+        .count();
+    let jolt1s = joltage_differences.len() - jolt3s;
+    jolt1s * jolt3s
 }
 
-fn part2(joltages: Vec<i64>) -> i64 {
-    let mut dp = vec![1];
-    for (i, joltage) in joltages.iter().enumerate().skip(1) {
-        let sum = (i.saturating_sub(3)..i)
-            .filter(|j| joltage - joltages[*j] <= 3)
-            .map(|j| dp[j])
-            .sum();
-        dp.push(sum);
-    }
-    *dp.last().unwrap()
+fn part2(joltage_differences: Vec<usize>) -> usize {
+    joltage_differences
+        .split(|jolt_diff| jolt_diff == &3)
+        .map(|sublist| {
+            match sublist.len() {
+                4 => 7,
+                3 => 4,
+                2 => 2,
+                _ => 1,
+            }
+        })
+        .fold(1, usize::mul)
 }
 
 fn main() {
@@ -66,6 +67,6 @@ fn example2() {
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone()), 1984);
-    assert_eq!(part2(input), 3543369523456);
+    assert_eq!(part1(input.clone()), 1890);
+    assert_eq!(part2(input), 49607173328384);
 }
