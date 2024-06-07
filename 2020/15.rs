@@ -1,46 +1,43 @@
 use advent::prelude::*;
 
-fn default_input() -> &'static [usize] {
-    &[2, 20, 0, 4, 1, 17]
+fn default_input() -> Vec<usize> {
+    parse_input(include_input!(2020 / 15))
 }
 
-/// Finds the nth term of the Van Eck sequence that continues from the given
-/// starting terms.
-///
-/// The method used here stores the lower numbers in a Vec to avoid expensive
-/// hashing. Less frequent higher numbers are stored in a HashMap.
-fn nth(seq: &[usize], n: usize) -> usize {
-    // Numbers less than this will be stored in `low`, numbers higher will be
-    // stored in `high`.
-    let bounds = n / 10;
+fn parse_input(input: &str) -> Vec<usize> {
+    get_numbers(input)
+}
 
-    let mut low = vec![0; bounds];
+fn last_number_spoken(start: Vec<usize>, iterations: usize) -> usize {
+    let bounds = iterations / 10;
+    let mut low = vec![0usize; bounds];
     let mut high = HashMap::with_capacity(bounds / 2);
 
-    // Add the initial terms.
-    for (turn, &n) in seq.iter().enumerate() {
+    for (turn, &n) in start.iter().enumerate() {
         low[n] = turn + 1;
     }
 
-    let mut curr = 0;
-    for turn in (seq.len() + 1)..n {
-        if curr < bounds {
-            let prev = &mut low[curr];
-            curr = if *prev == 0 { 0 } else { turn - *prev };
+    let mut current = 0;
+    for turn in start.len() + 1..iterations {
+        if current < bounds {
+            let prev = &mut low[current];
+            current = if *prev == 0 { 0 } else { turn - *prev };
             *prev = turn;
         } else {
-            curr = high.insert(curr, turn).map(|prev| turn - prev).unwrap_or(0)
+            current = high.insert(current, turn)
+                .map(|prev| turn - prev)
+                .unwrap_or(0);
         }
     }
-    curr
+    current
 }
 
-fn part1(seq: &[usize]) -> usize {
-    nth(seq, 2020)
+fn part1(start: Vec<usize>) -> usize {
+    last_number_spoken(start, 2020)
 }
 
-fn part2(seq: &[usize]) -> usize {
-    nth(seq, 30000000)
+fn part2(start: Vec<usize>) -> usize {
+    last_number_spoken(start, 30000000)
 }
 
 fn main() {
@@ -51,15 +48,15 @@ fn main() {
 #[test]
 fn example() {
     for (input, p1, p2) in [
-        (&[0, 3, 6], 436, 175594),
-        (&[1, 3, 2], 1, 2578),
-        (&[2, 1, 3], 10, 3544142),
-        (&[1, 2, 3], 27, 261214),
-        (&[2, 3, 1], 78, 6895259),
-        (&[3, 2, 1], 438, 18),
-        (&[3, 1, 2], 1836, 362),
+        (vec![0, 3, 6], 436, 175594),
+        (vec![1, 3, 2], 1, 2578),
+        (vec![2, 1, 3], 10, 3544142),
+        (vec![1, 2, 3], 27, 261214),
+        (vec![2, 3, 1], 78, 6895259),
+        (vec![3, 2, 1], 438, 18),
+        (vec![3, 1, 2], 1836, 362),
     ] {
-        assert_eq!(part1(input), p1);
+        assert_eq!(part1(input.clone()), p1);
         assert_eq!(part2(input), p2);
     }
 }
@@ -67,6 +64,6 @@ fn example() {
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input), 758);
-    assert_eq!(part2(input), 814);
+    assert_eq!(part1(input.clone()), 929);
+    assert_eq!(part2(input), 16671510);
 }
