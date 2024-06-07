@@ -1,50 +1,65 @@
+extern crate core;
+
+use core::str;
+use std::str::SplitWhitespace;
 use advent::prelude::*;
 
-fn parse_input(input: &str) -> Vec<&str> {
-    input.split_whitespace().collect()
+fn parse_input(input: &str) -> SplitWhitespace<'_> {
+    input.split_whitespace()
 }
 
-fn default_input() -> Vec<&'static str> {
+fn default_input() -> SplitWhitespace<'static> {
     parse_input(include_input!(2018 / 02))
 }
 
-fn part1(input: Vec<&str>) -> i64 {
-    let mut freqs: HashMap<char, usize> = HashMap::new();
-    let mut twos = 0;
-    let mut threes = 0;
-    for id in input {
-        freqs.clear();
-        for c in id.chars() {
-            *freqs.entry(c).or_default() += 1;
-        }
-        twos += freqs.values().any(|&count| count == 2) as i64;
-        threes += freqs.values().any(|&count| count == 3) as i64;
-    }
+fn part1(box_ids: SplitWhitespace<'_>) -> usize {
+    let frequencies = box_ids
+        .map(|box_id| {
+            box_id.as_bytes().iter()
+                .fold(HashMap::new(), |mut acc, &item| {
+                    *acc.entry(item).or_insert(0) += 1;
+                    acc
+                })
+        });
+
+    let twos = frequencies
+        .clone()
+        .filter(|it| it.values().contains(&2))
+        .count();
+
+    let threes = frequencies
+        .filter(|it| it.values().contains(&3))
+        .count();
     twos * threes
 }
 
-fn part2(input: Vec<&str>) -> String {
-    for left in &input {
-        for right in &input {
-            let (m, n) = diff(left, right);
-            if m == n {
-                return format!("{}{}", &left[..m], &left[n + 1..]);
+fn part2(box_ids: SplitWhitespace<'_>) -> String {
+    fn differs_by_one<'a>(a: &'a str, b: &'a str) -> bool {
+        let mut diffs = false;
+        let a = a.as_bytes();
+        let b = b.as_bytes();
+        for (idx, c) in a.into_iter().enumerate() {
+            if c != &b[idx] {
+                if !diffs {
+                    diffs = true
+                } else {
+                    return false
+                }
             }
+        }
+        return diffs
+    }
+    let box_ids: Vec<_> = box_ids.collect();
+    for (&a, &b) in box_ids[..box_ids.len() - 1].iter().cartesian_product(box_ids[1..].iter()) {
+        if differs_by_one(a, b) {
+            let x = a.as_bytes().into_iter().zip(b.as_bytes().into_iter());
+            let x: Vec<_> = x
+                .filter_map(|(a, b)| if a == b { Some(*a) } else { None })
+                .collect();
+            return String::from_utf8(x).unwrap()
         }
     }
     unreachable!()
-}
-
-// Returns the index of the first and last differing byte(s).
-//
-// If they are the same the caller can deduce that only one byte is
-// different between the strings.
-fn diff(left: &str, right: &str) -> (usize, usize) {
-    let l = left.as_bytes();
-    let r = right.as_bytes();
-    let m = (0..l.len()).find(|&i| l[i] != r[i]).unwrap_or(0);
-    let n = (0..l.len()).rfind(|&i| l[i] != r[i]).unwrap_or(l.len());
-    (m, n)
 }
 
 fn main() {
@@ -85,6 +100,6 @@ wvxyz",
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone()), 4712);
-    assert_eq!(part2(input), "lufjygedpvfbhftxiwnaorzmq");
+    assert_eq!(part1(input.clone()), 7688);
+    assert_eq!(part2(input), "lsrivmotzbdxpkxnaqmuwcchj");
 }
