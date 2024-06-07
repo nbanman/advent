@@ -3,6 +3,8 @@ pub use std::cmp::{max, min, Ordering, Reverse};
 pub use std::collections::{BTreeMap, BTreeSet, BinaryHeap, VecDeque};
 pub use std::iter;
 pub use std::mem;
+use std::ops::Add;
+use std::str::FromStr;
 
 pub use ahash::{HashMap, HashMapExt as _, HashSet, HashSetExt as _};
 pub use either::Either;
@@ -78,4 +80,222 @@ pub fn parse_map_set(input: &str) -> HashSet<Vector2> {
         c => panic!("unrecognized character `{c}`"),
     });
     map.into_iter().filter_map(|(k, v)| v.map(|_| k)).collect()
+}
+
+pub fn get_numbers<N>(s: &str) -> Vec<N>
+where
+    N: FromStr + Add<Output = N> + PartialEq + PartialOrd + Copy + Default,
+{
+    let mut numbers: Vec<N> = Vec::new();
+    let mut start_position = -1isize;
+    let s = s.as_bytes();
+    for (position, c) in s.iter().enumerate() {
+        let position = position as isize;
+        if c.is_ascii_digit() ||
+            (c == &b'-' && s.try_get(position - 1).map(|x| x.is_ascii_digit()) != Some(true)) {
+            if start_position == -1 {
+                start_position = position
+            }
+        } else {
+            if start_position != -1 {
+                if let Ok(sub_str) = std::str::from_utf8(&s[start_position as usize..position as usize]) {
+                    if let Ok(parsed) = sub_str.parse::<N>() {
+                        numbers.push(parsed);
+                    }
+                }
+                start_position = -1;
+            }
+        }
+    }
+    if start_position != -1 {
+        if let Ok(sub_str) = std::str::from_utf8(&s[start_position as usize..]) {
+            if let Ok(parsed) = sub_str.parse::<N>() {
+                numbers.push(parsed);
+            }
+        }
+    }
+    numbers
+}
+
+pub struct NumberIterator<'a, N> {
+    s: &'a [u8],
+    start_position: isize,
+    position: isize,
+    phantom: std::marker::PhantomData<N>,
+}
+
+impl <'a, N> NumberIterator<'a, N>
+where
+    N: FromStr + Add<Output = N> + PartialEq + PartialOrd + Copy + Default,
+{
+    pub fn new(input: &'a str) -> Self {
+        NumberIterator {
+            s: input.as_bytes(),
+            start_position: -1,
+            position: 0,
+            phantom: std::marker::PhantomData,
+        }
+    }
+}
+
+impl <'a, N> Iterator for NumberIterator<'a, N>
+where
+    N: FromStr + Add<Output = N> + PartialEq + PartialOrd + Copy + Default,
+{
+    type Item = N;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        while self.position < self.s.len() as isize {
+            let c = self.s[self.position as usize];
+
+            if c.is_ascii_digit() ||
+                (c == b'-' && self.s.try_get(self.position - 1).map(|x| x.is_ascii_digit()) != Some(true)) {
+                if self.start_position == -1 {
+                    self.start_position = self.position;
+                }
+            } else {
+                if self.start_position != -1 {
+                    if let Ok(sub_str) =
+                        std::str::from_utf8(&self.s[self.start_position as usize..self.position as usize]) {
+                        if let Ok(parsed) = sub_str.parse::<N>() {
+                            self.start_position = -1;
+                            self.position += 1;
+                            return Some(parsed)
+                        } else {
+                            self.start_position = -1;
+                        }
+                    }
+                }
+            }
+            self.position += 1;
+        }
+
+        if self.start_position != -1 {
+            if let Ok(sub_str) = std::str::from_utf8(&self.s[self.start_position as usize..]) {
+                if let Ok(parsed) = sub_str.parse::<N>() {
+                    // self.start_position = -1; // probably unnecessary
+                    return Some(parsed);
+                }
+            }
+        }
+
+        None
+    }
+}
+
+pub trait ContainsNumbers<N>
+    where
+        N: FromStr + Add<Output = N> + PartialEq + PartialOrd + Copy + Default,
+{
+    fn get_numbers(&self) -> NumberIterator<'_, N>;
+}
+
+impl <'a, N> ContainsNumbers<N> for &'a str
+where
+    N: FromStr + Add<Output = N> + PartialEq + PartialOrd + Copy + Default,
+{
+    fn get_numbers(&self) -> NumberIterator<'_, N> {
+        NumberIterator::new(self)
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum Direction {
+    N,
+    E,
+    S,
+    W,
+}
+
+/// Get from arrays with anything that can be converted to a usize
+pub trait TryGet<T> {
+    fn try_get<U: TryInto<usize>>(&self, n: U) -> Option<&T>;
+}
+
+impl<T> TryGet<T> for [T] {
+    fn try_get<U: TryInto<usize>>(&self, n: U) -> Option<&T> {
+        if let Ok(index) = n.try_into() {
+            self.get(index)
+        } else {
+            None
+        }
+    }
+}
+
+pub trait Grid<T> {
+    fn get_neighbors(&self, position: usize, width: usize) -> Vec<usize>;
+    fn get_neighbors_diagonal(&self, position: usize, width: usize) -> Vec<usize>;
+}
+
+trait GridHelper<T> {
+    fn get_neighbors_helper(&self, position: usize, directions: Vec<isize>) -> Vec<usize>;
+}
+
+impl<T> GridHelper<T> for [T] {
+    fn get_neighbors_helper(&self, position: usize, directions: Vec<isize>) -> Vec<usize> {
+        directions.into_iter()
+            .filter_map(|direction| {
+                let new_position = position as isize + direction;
+                if let Some(_) = self.try_get(new_position) {
+                    Some(new_position as usize)
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+}
+
+impl<T> Grid<T> for [T] {
+    fn get_neighbors(&self, position: usize, width: usize) -> Vec<usize> {
+        let width = width as isize;
+        let directions = vec![-width, width, -1, 1];
+        self.get_neighbors_helper(position, directions)
+    }
+
+    fn get_neighbors_diagonal(&self, position: usize, width: usize) -> Vec<usize> {
+        let width = width as isize;
+        let directions = vec![
+            -width - 1, -width, -width + 1, -1, 1, width - 1, width, width + 1
+        ];
+        self.get_neighbors_helper(position, directions)
+    }
+}
+
+pub fn min_max_with<T, R, F>(items: &[T], selector: F) -> (&T, &T)
+where
+    R: PartialOrd + Clone,
+    F: Fn(&T) -> R
+{
+    let mut min = &items[0];
+    let mut min_value = selector(min);
+    let mut max = min;
+    let mut max_value = min_value.clone();
+    for item in items {
+        let selected = selector(item);
+        if selected < min_value {
+            min = item;
+            min_value = selected;
+        } else if selected > max_value {
+            max = item;
+            max_value = selected
+        }
+    }
+    (min, max)
+}
+
+pub fn min_max<T>(items: &[T]) -> (&T, &T)
+where
+    T: PartialOrd,
+{
+    let mut min = &items[0];
+    let mut max = min;
+    for item in items {
+        if item < min {
+            min = item;
+        } else if item > max {
+            max = item;
+        }
+    }
+    (min, max)
 }
