@@ -1,86 +1,88 @@
 use advent::prelude::*;
 
-fn parse_record(input: &str) -> (DateTime<'_>, Event) {
-    let re = regex!(r"\[(?P<date>\d{4}-\d{2}-\d{2}) (?P<H>\d{2}):(?P<M>\d{2})\] (?P<descr>.*)");
-    let caps = re.captures(input).unwrap();
-    let date: &str = caps.name("date").unwrap().as_str();
-    let hour: i32 = caps["H"].parse().unwrap();
-    let min: i32 = caps["M"].parse().unwrap();
-    let datetime = DateTime { date, hour, min };
-    let event = match &caps["descr"] {
-        "wakes up" => Event::WakesUp,
-        "falls asleep" => Event::FallsAsleep,
-        d => {
-            let id = d
-                .strip_prefix("Guard #")
-                .unwrap()
-                .strip_suffix(" begins shift")
-                .unwrap();
-            Event::BeginsShift(id.parse().unwrap())
+fn parse_input(input: &str) -> HashMap<isize, Vec<[bool; 60]>> {
+    let mut guards = HashMap::new();
+    let log: Vec<_> = input
+        .lines()
+        .map(|line| {
+            let mut ints: NumberIterator<'_, isize> = line.get_numbers();
+            let date: Vec<_> = ints.by_ref().take(5).collect();
+            let id = if let Some(id) = ints.next() { id } else { -1 };
+            (date, id)
+        })
+        .sorted_unstable_by_key(|(date_time, _)| date_time.clone())
+        .collect();
+
+    let mut index = 0;
+
+    loop {
+        let (_, id) = log[index];
+        let mut hour = [false; 60];
+        let mut minute = 0;
+        let mut asleep = false;
+        index += 1;
+
+        while index < log.len() && log[index].1 == -1 {
+            let next_minute = log[index].0[4];
+            for min in minute..next_minute {
+                hour[min as usize] = asleep;
+            }
+            minute = next_minute;
+            asleep = !asleep;
+            index += 1;
         }
-    };
-    (datetime, event)
-}
 
-fn parse_input(input: &str) -> Vec<(DateTime<'_>, Event)> {
-    input.lines().map(parse_record).collect()
-}
+        for min in minute..60 {
+            hour[min as usize] = asleep;
+        }
 
-fn default_input() -> Vec<(DateTime<'static>, Event)> {
+        let entry = guards.entry(id).or_insert(Vec::new());
+        entry.push(hour);
+        if index >= log.len() { break }
+    }
+
+    guards
+}
+fn default_input() -> HashMap<isize, Vec<[bool; 60]>> {
     parse_input(include_input!(2018 / 04))
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-struct DateTime<'a> {
-    date: &'a str,
-    hour: i32,
-    min: i32,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-enum Event {
-    BeginsShift(i32),
-    FallsAsleep,
-    WakesUp,
-}
-
-fn solve(mut records: Vec<(DateTime<'_>, Event)>) -> (HashMap<i32, i32>, HashMap<(i32, i32), i32>) {
-    let mut totals = HashMap::new();
-    let mut mins = HashMap::new();
-    let mut guard_id = None;
-    let mut asleep = None;
-    records.sort();
-    for (dt, event) in records {
-        match event {
-            Event::BeginsShift(id) => guard_id = Some(id),
-            Event::FallsAsleep => asleep = Some(dt),
-            Event::WakesUp => {
-                let guard_id = guard_id.unwrap();
-                let asleep = asleep.unwrap();
-                for min in asleep.min..dt.min {
-                    *mins.entry((guard_id, min)).or_default() += 1;
-                    *totals.entry(guard_id).or_default() += 1;
-                }
-            }
-        }
-    }
-    (totals, mins)
-}
-
-fn part1(records: Vec<(DateTime<'_>, Event)>) -> i32 {
-    let (totals, mins) = solve(records);
-    let (guard_id, _) = totals.iter().max_by_key(|(_, count)| *count).unwrap();
-    let ((_, min), _) = mins
-        .iter()
-        .max_by_key(|((id, _), count)| (id == guard_id, *count))
+fn part1(guards: HashMap<isize, Vec<[bool; 60]>>) -> isize {
+    let (id, days) = guards
+        .into_iter()
+        .max_by_key(|(_, days)| {
+            days
+                .iter()
+                .flat_map(|hour| hour.iter().filter(|b| **b == true))
+                .count()
+        })
         .unwrap();
-    *guard_id * min
+
+    let most_asleep = (0..60)
+        .max_by_key(|&minute| { days.iter().filter(|day| day[minute as usize]).count()})
+        .unwrap();
+
+    id * most_asleep
 }
 
-fn part2(records: Vec<(DateTime<'_>, Event)>) -> i32 {
-    let (_, mins) = solve(records);
-    let ((guard_id, min), _) = mins.iter().max_by_key(|(_, count)| *count).unwrap();
-    *guard_id * min
+fn part2(guards: HashMap<isize, Vec<[bool; 60]>>) -> isize {
+    guards
+        .into_iter()
+        .map(|(id, days)| {
+            let days_ref = &days;
+            (0..60)
+                .map(|x| (0..days.len()).map(move |y| days_ref[y][x]))
+                .enumerate()
+                .map(|(minute, sleep_record)| {
+                    (minute, sleep_record.filter(|p| *p).count())
+                })
+                .max_by_key(|(_, asleep)| asleep.clone())
+                .map(|(minute, asleep)| (id, minute, asleep))
+                .unwrap()
+        })
+        .max_by_key(|(_, _, asleep)| asleep.clone())
+        .map(|(id, minute, _)| id * minute as isize)
+        .unwrap()
 }
 
 fn main() {
@@ -116,6 +118,6 @@ fn example() {
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone()), 12169);
-    assert_eq!(part2(input), 16164);
+    assert_eq!(part1(input.clone()), 19025);
+    assert_eq!(part2(input), 23776);
 }
