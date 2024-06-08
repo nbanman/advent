@@ -1,40 +1,36 @@
 use advent::prelude::*;
 
-fn default_input() -> &'static str {
-    include_input!(2018 / 05).trim()
+fn default_input() -> Vec<u8> {
+    parse_input(include_input!(2018 / 05).trim())
 }
 
-fn reacts(a: u8, b: u8) -> bool {
-    a.to_ascii_lowercase() == b.to_ascii_lowercase() && a != b
+fn parse_input(input: &str) -> Vec<u8> {
+    react(input.as_bytes().iter(), None)
 }
 
-fn react(polymer: impl Iterator<Item = u8>) -> usize {
-    let mut stack = Vec::new();
+fn react<'a>(polymer: impl Iterator<Item = &'a u8>, removed: Option<u8>) -> Vec<u8> {
+    let mut stack: Vec<u8> = Vec::new();
     for a in polymer {
-        match stack.last().copied() {
-            Some(b) if reacts(a, b) => {
+        if removed != None && (*a == removed.unwrap() || *a == removed.unwrap().to_ascii_uppercase()) {
+            // nada
+        } else {
+            if stack.is_empty() || (*stack.last().unwrap() as isize - *a as isize).abs() != 32 {
+                stack.push(a.to_owned())
+            } else {
                 stack.pop();
-            }
-            _ => {
-                stack.push(a);
             }
         }
     }
-    stack.len()
+    stack
 }
 
-fn part1(suit: &str) -> usize {
-    react(suit.bytes())
+fn part1(polymer: Vec<u8>) -> usize {
+    polymer.len()
 }
 
-fn part2(suit: &str) -> usize {
+fn part2(polymer: Vec<u8>) -> usize {
     (b'a'..=b'z')
-        .map(|a| {
-            let polymer = suit
-                .bytes()
-                .filter(|&b| b != a && b != a.to_ascii_uppercase());
-            react(polymer)
-        })
+        .map(|removed| react(polymer.iter(), Some(removed)).len())
         .min()
         .unwrap()
 }
@@ -47,13 +43,13 @@ fn main() {
 #[test]
 fn example() {
     let input = "dabAcCaCBAcCcaDA";
-    assert_eq!(part1(input), 10);
-    assert_eq!(part2(input), 4);
+    assert_eq!(part1(parse_input(input)), 10);
+    assert_eq!(part2(parse_input(input)), 4);
 }
 
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input), 10564);
-    assert_eq!(part2(input), 6336);
+    assert_eq!(part1(input.clone()), 10972);
+    assert_eq!(part2(input), 5278);
 }
