@@ -173,28 +173,27 @@ where
         if self.start_position != -1 {
             if let Ok(sub_str) = std::str::from_utf8(&self.s[self.start_position as usize..]) {
                 if let Ok(parsed) = sub_str.parse::<N>() {
-                    // self.start_position = -1; // probably unnecessary
+                    self.start_position = -1; // probably unnecessary
                     return Some(parsed);
                 }
             }
         }
-
         None
     }
 }
 
-pub trait ContainsNumbers<N>
-    where
-        N: FromStr + Add<Output = N> + PartialEq + PartialOrd + Copy + Default,
+pub trait ContainsNumbers
 {
-    fn get_numbers(&self) -> NumberIterator<'_, N>;
+    fn get_numbers<N>(&self) -> NumberIterator<'_, N>
+        where
+            N: FromStr + Add<Output = N> + PartialEq + PartialOrd + Copy + Default,;
 }
 
-impl <'a, N> ContainsNumbers<N> for &'a str
-where
-    N: FromStr + Add<Output = N> + PartialEq + PartialOrd + Copy + Default,
-{
-    fn get_numbers(&self) -> NumberIterator<'_, N> {
+impl <'a> ContainsNumbers for &'a str {
+    fn get_numbers<N>(&self) -> NumberIterator<'_, N>
+    where
+        N: FromStr + Add<Output = N> + PartialEq + PartialOrd + Copy + Default,
+    {
         NumberIterator::new(self)
     }
 }
