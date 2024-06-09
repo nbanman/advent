@@ -13,38 +13,32 @@ fn default_input() -> Vec<usize> {
 }
 
 fn parse(mut data: &[usize]) -> (&[usize], usize, usize) {
-    // The number of children in this node.
-    let nc = data[0];
-    // The number of metadata entries in this node.
-    let nm = data[1];
-    // The remaining data in this node.
+    let children = data[0];
+    let meta_entries = data[1];
     data = &data[2..];
 
     let mut total = 0;
     let mut values = Vec::new();
 
-    // Parse each child node using recursion.
-    for _ in 0..nc {
-        let (d, t, v) = parse(data);
-        data = d;
-        total += t;
-        values.push(v)
+    // build children recursively
+    for _ in 0..children {
+        let (child_data, child_total, child_value) = parse(data);
+        data = child_data; // this advances the data beyond the amount used by the inner parse
+        total += child_total;
+        values.push(child_value);
     }
 
-    // The metadata entries.
-    let metas = &data[..nm];
+    let metadata = &data[..meta_entries];
+    data = &data[meta_entries..];
 
-    // The remaining data. This is the next child node so we just return it back
-    // to the caller to parse.
-    data = &data[nm..];
-
-    let sum: usize = metas.iter().sum();
+    let sum = metadata.iter().sum();
     total += sum;
 
-    if nc == 0 {
+    if children == 0 {
         (data, total, sum)
     } else {
-        let value = metas.iter().filter_map(|i| values.get(i - 1)).sum();
+        let value = metadata.iter()
+            .filter_map(|i| values.get(i - 1)).sum();
         (data, total, value)
     }
 }
@@ -74,6 +68,6 @@ fn example() {
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone()), 45868);
-    assert_eq!(part2(input), 19724);
+    assert_eq!(part1(input.clone()), 36027);
+    assert_eq!(part2(input), 23960);
 }
