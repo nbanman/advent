@@ -1,15 +1,11 @@
+use std::ops::RangeInclusive;
 use advent::prelude::*;
 
 fn parse_input(input: &str) -> Vec<(Vector2, Vector2)> {
-    regex!(r"position=<\s*(-?\d+),\s*(-?\d+)> velocity=<\s*(-?\d+),\s*(-?\d+)>")
-        .captures_iter(input)
-        .map(|caps| {
-            let px = caps[1].parse().unwrap();
-            let py = caps[2].parse().unwrap();
-            let vx = caps[3].parse().unwrap();
-            let vy = caps[4].parse().unwrap();
-            (vector![px, py], vector![vx, vy])
-        })
+    input
+        .get_numbers()
+        .array_chunked()
+        .map(|[px, py, vx, vy]| (vector![px, py], vector![vx, vy]))
         .collect()
 }
 
@@ -37,35 +33,46 @@ fn to_string(points: &[(Vector2, Vector2)]) -> String {
     s
 }
 
-fn solve(mut points: Vec<(Vector2, Vector2)>) -> (Vec<(Vector2, Vector2)>, usize) {
-    let mut secs = 0;
-    let mut height = i64::MAX;
-    loop {
-        let min_y = points.iter().map(|(p, _)| p.y).min().unwrap();
-        let max_y = points.iter().map(|(p, _)| p.y).max().unwrap();
-        let h = max_y - min_y;
-        if h > height {
-            break;
-        }
-        height = h;
-        secs += 1;
-        for (p, v) in &mut points {
-            *p += *v;
-        }
+fn min_max_ranges<'a>(vectors: impl Iterator<Item = &'a Vector2>) -> (RangeInclusive<i64>, RangeInclusive<i64>) {
+    let mut min_x = i64::MAX;
+    let mut max_x = i64::MIN;
+    let mut min_y = i64::MAX;
+    let mut max_y = i64::MIN;
+
+    for vector in vectors {
+        if vector.x < min_x { min_x = vector.x };
+        if vector.x > max_x { max_x = vector.x };
+        if vector.y < min_y { min_y = vector.y };
+        if vector.y > max_y { max_y = vector.y };
     }
-    for (p, v) in &mut points {
-        *p -= *v;
-    }
-    (points, secs - 1)
+
+    (min_x..=max_x, min_y..=max_y)
+}
+
+fn solve(points: Vec<(Vector2, Vector2)>) -> (usize, Vec<(Vector2, Vector2)>) {
+    iter::successors(Some(points), |prev| Some(move_points(prev)))
+        .enumerate()
+        .find(|(_, points)| {
+            let positions = points
+                .iter()
+                .map(|(pos, _)| pos);
+            let (_, y_range) = min_max_ranges(positions);
+            y_range.end() - y_range.start() == 9
+        })
+        .unwrap()
+}
+
+fn move_points(points: &Vec<(Vector2, Vector2)>) -> Vec<(Vector2, Vector2)> {
+    points.iter().map(|&(pos, vel)| (pos + vel, vel)).collect()
 }
 
 fn part1(points: Vec<(Vector2, Vector2)>) -> String {
-    let (points, _) = solve(points);
+    let (_, points) = solve(points);
     to_string(&points)
 }
 
 fn part2(points: Vec<(Vector2, Vector2)>) -> usize {
-    let (_, secs) = solve(points);
+    let (secs, _) = solve(points);
     secs
 }
 
