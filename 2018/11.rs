@@ -1,65 +1,71 @@
-use std::fmt;
-
 use advent::prelude::*;
 
-const fn default_input() -> i64 {
-    9810
+fn default_input() -> usize {
+    include_input!(2018 / 11).trim().parse().unwrap()
+}
+const LENGTH: usize = 300;
+
+struct Square {
+    x: i64,
+    y: i64,
+    size: usize,
+    power: i64,
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct Show<T>(pub T);
+fn solve(serial: usize, smallest: usize, largest: usize) -> Square {
+    let cells: Vec<Vec<_>> = (0..LENGTH)
+        .map(|y| {
+            (0..LENGTH)
+                .map(|x| {
+                    let rack_id = x + 10;
+                    ((((rack_id * y + serial) * rack_id) % 1000) / 100) as i64 - 5
+                })
+                .collect()
+        })
+        .collect();
 
-impl<T: fmt::Debug> fmt::Display for Show<T> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Debug::fmt(&self.0, f)
-    }
-}
+    let mut grid = cells.clone();
+    let mut max = Square {
+        x: 0,
+        y: 0,
+        size: 0,
+        power: 0,
+    };
 
-fn power(serial: i64, x: i64, y: i64) -> i64 {
-    let rack_id = x + 10;
-    let p = (rack_id * y + serial) * rack_id;
-    (p / 100) % 10 - 5
-}
-
-// See https://en.wikipedia.org/wiki/Summed-area_table
-fn solve(serial: i64, sizes: impl Iterator<Item = usize>) -> [usize; 3] {
-    let mut grid = vec![vec![0; 301]; 301];
-    for y in 1..=300 {
-        for x in 1..=300 {
-            let p = power(serial, x as i64, y as i64);
-            grid[y][x] = p + grid[y - 1][x] + grid[y][x - 1] - grid[y - 1][x - 1];
-        }
-    }
-
-    let mut max_s = 0;
-    let mut max_y = 0;
-    let mut max_x = 0;
-    let mut max_p = 0;
-
-    for s in sizes {
-        for y in s..=300 {
-            for x in s..=300 {
-                let power = grid[y][x] - grid[y - s][x] - grid[y][x - s] + grid[y - s][x - s];
-                if power > max_p {
-                    max_s = s;
-                    max_y = y;
-                    max_x = x;
-                    max_p = power;
+    for size in 1..=largest {
+        for y in 0..=LENGTH - size {
+            if size >= smallest {
+                let mut power = grid[y].iter().take(size).sum();
+                for x in size..LENGTH {
+                    if power > max.power {
+                        max = Square {
+                            x: x as i64 - size as i64,
+                            y: y as i64,
+                            size,
+                            power,
+                        };
+                    }
+                    power += grid[y][x] - grid[y][x - size]
+                }
+            }
+            if y < LENGTH - size {
+                for x in 0..LENGTH {
+                    grid[y][x] += cells[y + size][x];
                 }
             }
         }
     }
-
-    [max_x - max_s + 1, max_y - max_s + 1, max_s]
+    max
 }
 
-fn part1(serial: i64) -> Show<[usize; 2]> {
-    let [x, y, _] = solve(serial, iter::once(3));
-    Show([x, y])
+fn part1(serial: usize) -> String {
+    let square = solve(serial, 3, 3);
+    format!("{},{}", square.x, square.y)
 }
 
-fn part2(serial: i64) -> Show<[usize; 3]> {
-    Show(solve(serial, 1..=300))
+fn part2(serial: usize) -> String {
+    let square = solve(serial, 1, 300);
+    format!("{},{},{}", square.x, square.y, square.size)
 }
 
 fn main() {
@@ -69,18 +75,18 @@ fn main() {
 
 #[test]
 fn example() {
-    for (input, exp1, exp2) in [
-        (18, [33, 45], [90, 269, 16]),
-        (42, [21, 61], [232, 251, 12]),
+    for (input, exp) in [
+        (18, String::from("33,45")),
+        (42, String::from("232, 251, 12")),
     ] {
-        assert_eq!(part1(input), Show(exp1));
-        assert_eq!(part2(input), Show(exp2));
+        assert_eq!(part1(input), exp);
+        assert_eq!(part2(input), exp);
     }
 }
 
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input), Show([245, 14]));
-    assert_eq!(part2(input), Show([235, 206, 13]));
+    assert_eq!(part1(input), String::from("235,48"));
+    assert_eq!(part2(input), String::from("285,113,11"));
 }
