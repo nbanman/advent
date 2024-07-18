@@ -206,6 +206,36 @@ pub enum Direction {
     W,
 }
 
+impl Direction {
+    pub fn ordinal(&self) -> usize {
+        match self {
+            Direction::N => 0,
+            Direction::E => 1,
+            Direction::S => 2,
+            Direction::W => 3,
+        }
+    }
+
+    fn from_ordinal(ordinal: usize) -> Option<Direction> {
+        match ordinal {
+            0 => Some(Direction::N),
+            1 => Some(Direction::E),
+            2 => Some(Direction::S),
+            3 => Some(Direction::W),
+            _ => None,
+        }
+    }
+    pub fn left(&self) -> Direction {
+        let left_ordinal = ((self.ordinal() as isize) - 1).rem_euclid(4) as usize;
+        Direction::from_ordinal(left_ordinal).unwrap()
+    }
+
+    pub fn right(&self) -> Direction {
+        let right_ordinal = (self.ordinal() + 1).rem_euclid(4);
+        Direction::from_ordinal(right_ordinal).unwrap()
+    }
+}
+
 /// Get from arrays with anything that can be converted to a usize
 pub trait TryGet<T> {
     fn try_get<U: TryInto<usize>>(&self, n: U) -> Option<&T>;
