@@ -22,34 +22,19 @@ fn get_pipe(field: &str) -> Vec<Direction> {
         Direction::S
     };
 
-    // lambda for moving along the pipe, taking in the position and direction and returning the next
-    // position and direction
-    let move_direction = |(pos, dir): (usize, Direction)| {
-        // calculate next position
-        let next_pos: usize = move_along_pipe(&pos, dir, &field_width);
-
-        // Calculate next direction by looking at the character in the next position.
-        // If it's 'L' or '7', that means East/West turns right and North/South turns left.
-        // If it's 'J' or 'F', that means East/West turns left and North/South turns right.
-        // Otherwise, go straight.
-        let neighbor_dir = match field[next_pos] {
+    // move along the pipe recording positions until we hit 'S'
+    let mut directions = vec![start_dir];
+    let mut pos = start_pos;
+    let mut dir = start_dir;
+    loop {
+        pos = move_along_pipe(&pos, dir, &field_width);
+        if field[pos] == b'S' { break }
+        dir = match field[pos] {
             b'L' | b'7' => if dir.ordinal() & 1 == 1 { dir.right() } else { dir.left() },
             b'J' | b'F' => if dir.ordinal() & 1 == 0 { dir.right() } else { dir.left() },
             _ => dir,
         };
-        (next_pos, neighbor_dir)
-    };
-
-    // move along the pipe recording positions until we hit 'S'
-    let mut directions = vec![start_dir];
-    let mut pos = start_pos;
-    let mut direction = start_dir;
-    loop {
-        let (new_pos, new_dir) = move_direction((pos, direction));
-        if field[new_pos] == b'S' { break }
-        pos = new_pos;
-        direction = new_dir;
-        directions.push(direction);
+        directions.push(dir);
     }
     directions
 }
