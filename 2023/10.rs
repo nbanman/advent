@@ -1,90 +1,66 @@
 use advent::prelude::*;
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-enum Direction {
-    N,
-    E,
-    S,
-    W,
-}
-
 fn default_input() -> &'static str {
     include_input!(2023 / 10)
 }
 
 // list of directions taken by the loop
 fn get_pipe(field: &str) -> Vec<Direction> {
-
-    let direction_map = get_direction_map();
+    let field = field.as_bytes();
 
     // get width of field
-    let field_width = field.find('\n').unwrap();
+    let field_width = field.iter().position(|&x| x == b'\n').unwrap() + 1;
 
     // start at 'S'
-    let start_pos = field.find('S').unwrap();
+    let start_pos = field.iter().position(|&x| x == b'S').unwrap();
 
-    let start_dir = if "7|F".contains(field.as_bytes()[move_along_pipe(&start_pos, &Direction::N, &field_width)] as char) {
+    let start_dir = if "7|F".contains(field[move_along_pipe(&start_pos, Direction::N, &field_width)] as char) {
         Direction::N
-    } else if "7-J".contains(field.as_bytes()[move_along_pipe(&start_pos, &Direction::E, &field_width)] as char) {
+    } else if "7-J".contains(field[move_along_pipe(&start_pos, Direction::E, &field_width)] as char) {
         Direction::E
     } else {
         Direction::S
     };
 
-    let move_direction = |(pos, dir): (usize, &Direction)| {
+    // lambda for moving along the pipe, taking in the position and direction and returning the next
+    // position and direction
+    let move_direction = |(pos, dir): (usize, Direction)| {
+        // calculate next position
         let next_pos: usize = move_along_pipe(&pos, dir, &field_width);
-        let neighbor_dir = direction_map
-            .get(&(field.as_bytes()[next_pos] as char, dir.clone()))
-            .unwrap();
+
+        // Calculate next direction by looking at the character in the next position.
+        // If it's 'L' or '7', that means East/West turns right and North/South turns left.
+        // If it's 'J' or 'F', that means East/West turns left and North/South turns right.
+        // Otherwise, go straight.
+        let neighbor_dir = match field[next_pos] {
+            b'L' | b'7' => if dir.ordinal() & 1 == 1 { dir.right() } else { dir.left() },
+            b'J' | b'F' => if dir.ordinal() & 1 == 0 { dir.right() } else { dir.left() },
+            _ => dir,
+        };
         (next_pos, neighbor_dir)
     };
 
+    // move along the pipe recording positions until we hit 'S'
     let mut directions = vec![start_dir];
-
     let mut pos = start_pos;
-    let mut direction = start_dir.clone();
+    let mut direction = start_dir;
     loop {
-        let (new_pos, new_dir) = move_direction((pos, &direction));
-        if field.as_bytes()[new_pos] as char == 'S' { break };
+        let (new_pos, new_dir) = move_direction((pos, direction));
+        if field[new_pos] == b'S' { break }
         pos = new_pos;
-        direction = new_dir.clone();
+        direction = new_dir;
         directions.push(direction);
     }
-
     directions
 }
 
-fn move_along_pipe(pos: &usize, dir: &Direction, width: &usize) -> usize {
+fn move_along_pipe(pos: &usize, dir: Direction, width: &usize) -> usize {
     match dir {
-        Direction::N => pos - (width + 1),
+        Direction::N => pos - width,
         Direction::E => pos + 1,
-        Direction::S => pos + (width + 1),
+        Direction::S => pos + width,
         Direction::W => pos - 1,
     }
-}
-
-fn get_direction_map() -> HashMap<(char, Direction), Direction> {
-    [
-        (('S', Direction::N), Direction::N),
-        (('S', Direction::S), Direction::S),
-        (('S', Direction::E), Direction::E),
-        (('S', Direction::W), Direction::W),
-        (('|', Direction::N), Direction::N),
-        (('|', Direction::S), Direction::S),
-        (('-', Direction::E), Direction::E),
-        (('-', Direction::W), Direction::W),
-        (('L', Direction::S), Direction::E),
-        (('L', Direction::W), Direction::N),
-        (('J', Direction::S), Direction::W),
-        (('J', Direction::E), Direction::N),
-        (('7', Direction::E), Direction::S),
-        (('7', Direction::N), Direction::W),
-        (('F', Direction::W), Direction::S),
-        (('F', Direction::N), Direction::E),
-    ]
-        .iter()
-        .cloned()
-        .collect()
 }
 
 fn part1(field: &str) -> usize {
@@ -103,10 +79,8 @@ fn part2(field: &str) -> usize {
                 Direction::E => (sum + d, d),
             }
         });
-
     area.abs() as usize - (pipe.len() / 2) + 1
 }
-
 
 fn main() {
     let solution = advent::new(default_input).part(part1).part(part2).build();
@@ -128,6 +102,7 @@ fn example1() {
     assert_eq!(part1(input), 22);
     assert_eq!(part2(input), 5);
 }
+
 #[test]
 fn default() {
     let input = default_input();
