@@ -1,12 +1,19 @@
 use advent::prelude::*;
 
-fn default_input() -> (Vec<i64>, HashSet<i64>) {
-    let entries = get_numbers(include_input!(2020 / 01));
-    let entry_set: HashSet<_> = entries.iter().map(|n| *n).collect();
-    (entries, entry_set)
+#[derive(Clone)]
+struct Input {
+    entries: Vec<i64>,
+    entry_set: HashSet<i64>,
 }
 
-fn part1((_, entry_set): (Vec<i64>, HashSet<i64>)) -> i64 {
+fn default_input() -> Input {
+    let entries = get_numbers(include_input!(2020 / 01));
+    let entry_set: HashSet<_> = entries.iter().map(|n| *n).collect();
+    Input { entries, entry_set }
+}
+
+fn part1(input: Input) -> i64 {
+    let Input { entries: _, entry_set } = input;
     for entry in entry_set.iter() {
         let complement = 2020 - entry;
         if entry_set.contains(&complement) {
@@ -16,7 +23,8 @@ fn part1((_, entry_set): (Vec<i64>, HashSet<i64>)) -> i64 {
     unreachable!()
 }
 
-fn part2((entries, entry_set): (Vec<i64>, HashSet<i64>)) -> i64 {
+fn part2(input: Input) -> i64 {
+    let Input { entries, entry_set } = input;
     for (first, second) in entries.iter().dropping_back(1)
         .cartesian_product(entries.iter().dropping(1)) {
 
