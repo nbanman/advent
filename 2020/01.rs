@@ -13,7 +13,7 @@ fn part1((_, entry_set): (Vec<i64>, HashSet<i64>)) -> i64 {
             return entry * complement
         }
     }
-    -1
+    unreachable!()
 }
 
 fn part2((entries, entry_set): (Vec<i64>, HashSet<i64>)) -> i64 {
@@ -25,7 +25,7 @@ fn part2((entries, entry_set): (Vec<i64>, HashSet<i64>)) -> i64 {
             return first * second * complement
         }
     }
-    -1
+    unreachable!()
 }
 
 fn main() {
