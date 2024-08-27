@@ -1,4 +1,5 @@
 use std::ops::RangeInclusive;
+
 use advent::prelude::*;
 
 #[derive(Clone)]
@@ -20,31 +21,9 @@ impl Sensor {
     }
 }
 
-fn min_max<T, R: PartialOrd, F>(items: &[T], selector: F) -> (&T, &T)
-where
-    R: Clone,
-    F: Fn(&T) -> R
-{
-    let mut min = &items[0];
-    let mut min_value = selector(min);
-    let mut max = min;
-    let mut max_value = min_value.clone();
-    for item in items {
-        let selected = selector(item);
-        if selected < min_value {
-            min = item;
-            min_value = selected;
-        } else if selected > max_value {
-            max = item;
-            max_value = selected
-        }
-    }
-    (min, max)
-}
-
 fn is_contiguous(a: &RangeInclusive<i64>, b: &RangeInclusive<i64>) -> Option<RangeInclusive<i64>> {
     let binding = &[a, b];
-    let (lesser, greater) = min_max(binding, |it| it.start());
+    let (lesser, greater) = min_max_with(binding, |it| it.start());
     if lesser.end() >= greater.start() {
         Some(*lesser.start()..=*max(lesser.end(), greater.end()))
     } else {
@@ -70,7 +49,7 @@ fn concatenate(row_ranges: &mut Vec<RangeInclusive<i64>>) -> Vec<RangeInclusive<
         while i < row_ranges.len() - 1 {
             let mut j = i + 1;
             while j < row_ranges.len() {
-                if let Some(union) = is_contiguous(&row_ranges[i],&row_ranges[j]){
+                if let Some(union) = is_contiguous(&row_ranges[i], &row_ranges[j]) {
                     row_ranges[i] = union;
                     row_ranges.remove(j);
                 } else {
@@ -82,6 +61,7 @@ fn concatenate(row_ranges: &mut Vec<RangeInclusive<i64>>) -> Vec<RangeInclusive<
     }
     row_ranges.clone()
 }
+
 fn row_ranges(sensors: &Vec<Sensor>, y: i64) -> Vec<RangeInclusive<i64>> {
     let mut row_ranges: Vec<_> = sensors.into_iter()
         .filter_map(|sensor| sensor.to_range(y))

@@ -27,7 +27,6 @@ fn default_input() -> Bags<'static> {
 }
 
 
-
 fn part1(bags: Bags<'_>) -> usize {
     bags.keys()
         .filter(|&&bag| contains_gold(bag, &bags))
@@ -39,7 +38,7 @@ fn contains_gold(bag: &str, bags: &Bags<'_>) -> bool {
     let mut q = VecDeque::new();
     q.push_back(bag);
     while let Some(next_bag) = q.pop_front() {
-        if next_bag == "shiny gold" { return true }
+        if next_bag == "shiny gold" { return true; }
         visited.insert(next_bag);
         bags[next_bag].iter()
             .filter(|(held_bag, _)| !visited.contains(held_bag))

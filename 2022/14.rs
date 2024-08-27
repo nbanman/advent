@@ -1,4 +1,5 @@
 use advent::prelude::*;
+
 fn parse_input(input: &str) -> (HashSet<Vector2>, i64) {
     let cavern: HashSet<Vector2> = input
         .lines()
@@ -30,27 +31,28 @@ fn default_input() -> (HashSet<Vector2>, i64) {
 }
 
 fn solve<F>(cavern: &mut HashSet<Vector2>, depth: i64, predicate: F) -> usize
-where
-    F: Fn(Vector2) -> bool
+    where
+        F: Fn(Vector2) -> bool
 {
     let mut index = 0usize;
+    let options: Vec<Vector2> = vec![vector![0, 1], vector![-1, 1], vector![1, 1]];
     loop {
-        let grain = settle(cavern, depth);
-        if predicate(grain) { return index }
+        let grain = settle(cavern, depth, &options);
+        if predicate(grain) { return index; }
         cavern.insert(grain);
         index += 1;
     }
 }
 
-fn fall(cavern: &HashSet<Vector2>, grain: &Vector2) -> Option<Vector2> {
-    vec![vector![0, 1], vector![-1, 1], vector![1, 1]]
+fn fall(cavern: &HashSet<Vector2>, grain: &Vector2, options: &Vec<Vector2>) -> Option<Vector2> {
+    options
         .into_iter()
         .map(|v| v + grain)
         .find(|v| !cavern.contains(v))
 }
 
-fn settle(cavern: &HashSet<Vector2>, depth: i64) -> Vector2 {
-    iter::successors(Some(vector![500, 0]), |grain| fall(cavern, grain))
+fn settle(cavern: &HashSet<Vector2>, depth: i64, options: &Vec<Vector2>) -> Vector2 {
+    iter::successors(Some(vector![500, 0]), |grain| fall(cavern, grain, options))
         .take_while(|grain| grain.y <= depth + 1)
         .last()
         .unwrap()

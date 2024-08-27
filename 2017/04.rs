@@ -1,4 +1,5 @@
 use std::hash::Hash;
+
 use advent::prelude::*;
 
 fn parse_input(input: &str) -> Vec<Vec<&str>> {
@@ -10,8 +11,8 @@ fn default_input() -> Vec<Vec<&'static str>> {
 }
 
 fn count_unique<T>(passphrases: Vec<Vec<T>>) -> usize
-where
-    T: Eq + Hash,
+    where
+        T: Eq + Hash,
 {
     passphrases.into_iter()
         .filter(|phrase| {
@@ -19,6 +20,7 @@ where
             phrase.len() == distinct.len()
         }).count()
 }
+
 fn part1(passphrases: Vec<Vec<&str>>) -> usize {
     count_unique(passphrases)
 }

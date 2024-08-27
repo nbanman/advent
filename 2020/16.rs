@@ -1,75 +1,125 @@
+use std::ops::RangeInclusive;
+
 use advent::prelude::*;
 
 type Ticket = Vec<i64>;
 
-fn parse_tickets(input: &str) -> impl Iterator<Item = Ticket> + '_ {
-    input
-        .lines()
-        .skip(1) // header
-        .map(|line| {
-            line.split(',')
-                .map(str::parse)
-                .map(Result::unwrap)
-                .collect()
-        })
-}
-
-fn parse_input(input: &str) -> (Vec<Rule<'_>>, Ticket, Vec<Ticket>) {
-    let [rules, your, nearby] = input.split("\n\n").next_array().unwrap();
-    let rules =
-        regex!(r"(?P<name>.+): (?P<lmin>\d+)\-(?P<lmax>\d+) or (?P<rmin>\d+)\-(?P<rmax>\d+)")
-            .captures_iter(rules)
-            .map(|caps| Rule {
-                name: caps.name("name").unwrap().as_str(),
-                lmin: caps["lmin"].parse().unwrap(),
-                lmax: caps["lmax"].parse().unwrap(),
-                rmin: caps["rmin"].parse().unwrap(),
-                rmax: caps["rmax"].parse().unwrap(),
-            })
-            .collect();
-    let your = parse_tickets(your).next().unwrap();
-    let nearby = parse_tickets(nearby).collect();
-    (rules, your, nearby)
-}
-
-fn default_input() -> (Vec<Rule<'static>>, Ticket, Vec<Ticket>) {
-    parse_input(include_input!(2020 / 16))
-}
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Rule<'a> {
     name: &'a str,
-    lmin: i64,
-    lmax: i64,
-    rmin: i64,
-    rmax: i64,
+    low: RangeInclusive<i64>,
+    high: RangeInclusive<i64>,
 }
 
 impl Rule<'_> {
-    fn matches(&self, v: &i64) -> bool {
-        (self.lmin..=self.lmax).contains(v) || (self.rmin..=self.rmax).contains(v)
+    fn valid_for(&self, value: &i64) -> bool {
+        self.low.contains(value) || self.high.contains(value)
     }
 }
 
-fn part1((rules, _, nearby): (Vec<Rule<'_>>, Ticket, Vec<Ticket>)) -> i64 {
-    nearby
-        .iter()
-        .flat_map(|ticket| {
-            ticket
-                .iter()
-                .filter(|v| !rules.iter().any(|rule| rule.matches(v)))
+fn parse_input(input: &str) -> (Vec<Rule<'_>>, Vec<Ticket>) {
+    let (rules, tickets) = input.split_once("\n\n").unwrap();
+    let rules = rules
+        .lines()
+        .map(|line| {
+            let (name, ranges) = line.split_once(':').unwrap();
+            let [low, high] = &ranges
+                .get_numbers()
+                .array_chunked()
+                .map(|[start, end]| start..=end)
+                .collect::<Vec<_>>()[..];
+            Rule { name, low: low.to_owned(), high: high.to_owned() }
+        }).collect();
+
+    let tickets: Vec<_> = tickets
+        .lines()
+        .filter_map(|line| {
+            let numbers = get_numbers(line);
+            if numbers.len() == 0 {
+                None
+            } else {
+                Some(numbers)
+            }
+        })
+        .collect();
+    (rules, tickets)
+}
+
+fn default_input() -> (Vec<Rule<'static>>, Vec<Ticket>) {
+    parse_input(include_input!(2020 / 16))
+}
+
+
+fn part1((rules, tickets): (Vec<Rule<'_>>, Vec<Ticket>)) -> i64 {
+    tickets
+        .into_iter()
+        .flatten()
+        .filter(|value| {
+            rules.iter().all(|rule| !rule.valid_for(value))
         })
         .sum()
 }
 
-fn part2((rules, your, nearby): (Vec<Rule<'_>>, Ticket, Vec<Ticket>)) -> i64 {
+fn part2((rules, tickets): (Vec<Rule<'_>>, Vec<Ticket>)) -> i64 {
+    let valid_tickets: Vec<_> = tickets
+        .into_iter()
+        .filter(|ticket| {
+            ticket.into_iter().all(|value| {
+                rules.iter().any(|rule| rule.valid_for(value))
+            })
+        })
+        .collect();
+
+    let width = valid_tickets
+        .iter()
+        .map(|ticket| ticket.len())
+        .min()
+        .unwrap();
+    let height = valid_tickets.len();
+
+    let value_list: Vec<Vec<_>> = (0..width)
+        .map(|w| {
+            (0..height)
+                .map(|h| {
+                    valid_tickets[h][w]
+                })
+                .collect()
+        })
+        .collect();
+
+    let mut sorter: Vec<(i64, Vec<&Rule>)> = value_list
+        .into_iter()
+        .enumerate()
+        .map(|index, values| {
+            let rules: Vec<_> = rules
+                .iter()
+                .filter(|rule| values.all(|value| rule.valid_for(value)))
+                .collect();
+            (index, rules)
+        })
+        .collect();
+
+    let mut register = HashMap::new();
+    while !sorter.is_empty() {
+        let temp_sorter = sorter
+            .iter()
+            .filter(|(_, rule)| rule.len() == 1);
+        for (index, rule) in temp_sorter {
+            register.insert(rule, index);
+            sorter.remove((index, rule));
+            for mut x in sorter.iter() {
+                x.1.remove(x.1.first().unwrap())
+            }
+        }
+    }
+
     // First we find all the tickets that match any rule correctly.
     let valid: Vec<_> = nearby
         .iter()
         .filter(|ticket| {
             ticket
                 .iter()
-                .all(|v| rules.iter().any(|rule| rule.matches(v)))
+                .all(|v| rules.iter().any(|rule| rule.valid_for(v)))
         })
         .collect();
 
@@ -81,7 +131,7 @@ fn part2((rules, your, nearby): (Vec<Rule<'_>>, Ticket, Vec<Ticket>)) -> i64 {
             // The set of rules that match all the column values.
             let rules: HashSet<_> = rules
                 .iter()
-                .filter(|rule| set.iter().all(|v| rule.matches(v)))
+                .filter(|rule| set.iter().all(|v| rule.valid_for(v)))
                 .collect();
             (col, rules)
         })

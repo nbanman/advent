@@ -14,8 +14,8 @@ fn default_input() -> Vec<(&'static str, isize)> {
 }
 
 fn solve<F>(commands: Vec<(&str, isize)>, interpretation: F) -> isize
-where
-    F: Fn((isize, isize, isize), (&str, isize)) -> (isize, isize, isize)
+    where
+        F: Fn((isize, isize, isize), (&str, isize)) -> (isize, isize, isize)
 {
     let (x, y, _) = commands.into_iter().fold((0isize, 0isize, 0isize), interpretation);
     x * y

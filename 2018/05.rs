@@ -8,7 +8,7 @@ fn parse_input(input: &str) -> Vec<u8> {
     react(input.as_bytes().iter(), None)
 }
 
-fn react<'a>(polymer: impl Iterator<Item = &'a u8>, removed: Option<u8>) -> Vec<u8> {
+fn react<'a>(polymer: impl Iterator<Item=&'a u8>, removed: Option<u8>) -> Vec<u8> {
     let mut stack: Vec<u8> = Vec::new();
     for a in polymer {
         if removed != None && (*a == removed.unwrap() || *a == removed.unwrap().to_ascii_uppercase()) {

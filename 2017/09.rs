@@ -20,14 +20,15 @@ fn solve(input: &str) -> (usize, usize) {
                 '{' => {
                     depth += 1;
                     score += depth;
-                },
+                }
                 '}' => depth -= 1,
-                _ => {},
+                _ => {}
             }
         }
     }
     (score, garbage)
 }
+
 fn part1(input: &str) -> usize {
     solve(input).0
 }

@@ -49,7 +49,7 @@ fn set<const N: usize>(grid: &mut [u128; N], x: i64, y: i64, a: u128) {
     grid[y as usize] = (grid[y as usize] & !mask) | acre;
 }
 
-fn count(iter: impl Iterator<Item = u128>) -> (usize, usize) {
+fn count(iter: impl Iterator<Item=u128>) -> (usize, usize) {
     let mut wooded = 0;
     let mut lumberyards = 0;
     for a in iter {

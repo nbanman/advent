@@ -28,10 +28,11 @@ fn astar(city: Vec<Vec<u32>>, l: usize, h: usize) -> u32 {
             let y = pos / width;
             let steps = cost[y][x][dir];
 
-            if pos == end { return steps };
+            if pos == end { return steps; };
 
-            let heuristic = {|x: usize, y: usize, steps: u32|
-                (steps as usize + width - x + height - y) % 100
+            let heuristic = {
+                |x: usize, y: usize, steps: u32|
+                    (steps as usize + width - x + height - y) % 100
             };
 
             let mut new_x;
@@ -44,7 +45,7 @@ fn astar(city: Vec<Vec<u32>>, l: usize, h: usize) -> u32 {
                 new_y = y;
                 new_steps = steps;
                 for i in 1..=h {
-                    if i > x { break };
+                    if i > x { break; };
                     new_x -= 1;
                     new_steps += city[new_y][new_x];
 
@@ -59,7 +60,7 @@ fn astar(city: Vec<Vec<u32>>, l: usize, h: usize) -> u32 {
                 new_y = y;
                 new_steps = steps;
                 for i in 1..=h {
-                    if x + i >= width { break };
+                    if x + i >= width { break; };
                     new_x += 1;
                     new_steps += city[new_y][new_x];
 
@@ -75,7 +76,7 @@ fn astar(city: Vec<Vec<u32>>, l: usize, h: usize) -> u32 {
                 new_y = y;
                 new_steps = steps;
                 for i in 1..=h {
-                    if i > y { break };
+                    if i > y { break; };
                     new_y -= 1;
                     new_steps += city[new_y][new_x];
 
@@ -91,7 +92,7 @@ fn astar(city: Vec<Vec<u32>>, l: usize, h: usize) -> u32 {
                 new_y = y;
                 new_steps = steps;
                 for i in 1..=h {
-                    if y + i >= height { break };
+                    if y + i >= height { break; };
                     new_y += 1;
                     new_steps += city[new_y][new_x];
 

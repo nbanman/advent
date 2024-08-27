@@ -7,7 +7,7 @@ fn default_input() -> HashSet<Vector<2>> {
     parse_map_set(include_input!(2020 / 17))
 }
 
-fn neighbours<const N: usize>(cube: Vector<N>) -> impl Iterator<Item = Vector<N>> {
+fn neighbours<const N: usize>(cube: Vector<N>) -> impl Iterator<Item=Vector<N>> {
     [[-1, 0, 1]; N]
         .into_iter()
         .multi_cartesian_product()

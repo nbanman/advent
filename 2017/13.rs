@@ -33,7 +33,7 @@ fn part2(layers: Vec<(usize, usize)>) -> usize {
     let mut offset = 0usize;
     loop {
         if !layers.iter().any(|(depth, range)| is_triggered(depth, range, &offset)) {
-            return offset
+            return offset;
         }
         offset += 1;
     }

@@ -1,4 +1,3 @@
-
 use advent::prelude::*;
 
 fn parse_input(input: &str) -> Vec<usize> {
@@ -24,7 +23,7 @@ fn part1(cards: Vec<usize>) -> usize {
 fn part2(cards: Vec<usize>) -> usize {
     let mut card_count = vec![1; cards.len()];
     cards.iter().enumerate().for_each(|(index, count)| {
-        let range = index + 1 ..= index + count;
+        let range = index + 1..=index + count;
         let number_of_cards = card_count[index];
         range.for_each(|i| card_count[i] += number_of_cards)
     });

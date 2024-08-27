@@ -1,7 +1,7 @@
-mod intcode;
-
 use advent::prelude::*;
 use intcode::parse_program;
+
+mod intcode;
 
 fn default_input() -> Vec<usize> {
     parse_program(include_input!(2019 / 02))

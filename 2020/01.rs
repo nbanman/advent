@@ -17,7 +17,7 @@ fn part1(input: Input) -> i64 {
     for entry in entry_set.iter() {
         let complement = 2020 - entry;
         if entry_set.contains(&complement) {
-            return entry * complement
+            return entry * complement;
         }
     }
     unreachable!()
@@ -27,10 +27,9 @@ fn part2(input: Input) -> i64 {
     let Input { entries, entry_set } = input;
     for (first, second) in entries.iter().dropping_back(1)
         .cartesian_product(entries.iter().dropping(1)) {
-
         let complement = 2020 - first - second;
         if entry_set.contains(&complement) {
-            return first * second * complement
+            return first * second * complement;
         }
     }
     unreachable!()

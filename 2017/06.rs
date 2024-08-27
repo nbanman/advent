@@ -21,6 +21,7 @@ fn reallocate(state: &Vec<usize>) -> Vec<usize> {
     }
     new_list
 }
+
 fn parse_input(input: &str) -> (usize, HashMap<Vec<usize>, usize>, Vec<usize>) {
     let mut state: Vec<usize> = input.trim_end().split('\t').map(|v| v.parse().unwrap()).collect();
     let mut insertion_index = 0usize;
@@ -31,7 +32,7 @@ fn parse_input(input: &str) -> (usize, HashMap<Vec<usize>, usize>, Vec<usize>) {
         set.insert(state.to_owned(), insertion_index);
         state = reallocate(&state);
         index += 1;
-        if set.keys().contains(&state) { return (index, set, state) }
+        if set.keys().contains(&state) { return (index, set, state); }
         insertion_index += 1;
     }
 }
@@ -52,6 +53,7 @@ fn main() {
     let solution = advent::new(default_input).part(part1).part(part2).build();
     solution.cli()
 }
+
 #[test]
 fn default() {
     let input = default_input();

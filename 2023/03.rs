@@ -1,14 +1,15 @@
-use advent::prelude::*;
-use std::ops::Range;
 use std::collections::HashSet;
+use std::ops::Range;
+
+use advent::prelude::*;
 
 fn default_input() -> &'static str {
     include_input!(2023 / 03)
 }
 
 fn numbers_adjacent_to_symbol<F>(schematic: &str, width: usize, symbol: F) -> Vec<HashSet<Range<usize>>>
-where
-    F: Fn(&char) -> bool
+    where
+        F: Fn(&char) -> bool
 {
     schematic.chars().enumerate()
         .filter(|(_, c)| symbol(c))
@@ -27,18 +28,18 @@ where
 }
 
 fn get_number(schematic: &str, index: isize) -> Option<Range<usize>> {
-    if index < 0 || index >= schematic.len() as isize { return None };
-    if !schematic.as_bytes()[index as usize].is_ascii_digit() { return None };
+    if index < 0 || index >= schematic.len() as isize { return None; };
+    if !schematic.as_bytes()[index as usize].is_ascii_digit() { return None; };
     let mut left_index = index as usize;
     let mut right_index = index as usize;
-    while let Some(x) = left_index.checked_sub(1) { 
+    while let Some(x) = left_index.checked_sub(1) {
         if schematic.as_bytes()[x].is_ascii_digit() {
             left_index = x;
         } else {
             break;
         }
     };
-    while schematic.as_bytes()[right_index + 1].is_ascii_digit()  { 
+    while schematic.as_bytes()[right_index + 1].is_ascii_digit() {
         right_index += 1;
     };
     Some(left_index..right_index)

@@ -23,7 +23,6 @@ fn parse_input(input: &str) -> (&[u8], Vec<isize>, Vec<usize>) {
                     })
                     .all(|neighbor_height| neighbor_height > height)
             }
-
         })
         .collect();
     (input, start_vec, low_indices)

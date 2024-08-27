@@ -62,7 +62,7 @@ fn solve(instructions: Vec<(u8, u8)>, workers: usize, time_offset: usize) -> (St
         .len();
     let mut worker_pool = vec![Worker { working_on: b'.', ready: 0 }; workers];
     let mut answer = String::new();
-    let time = iter::successors(Some(0), |&t| Some(t + 1) )
+    let time = iter::successors(Some(0), |&t| Some(t + 1))
         .find(|&t| {
             for worker in worker_pool.iter_mut().filter(|it| it.is_finished(t)) {
                 let product = worker.working_on;

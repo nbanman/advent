@@ -1,63 +1,110 @@
-use std::ops::BitOr;
+use std::hash::Hash;
 
 use advent::prelude::*;
 
-fn parse_input(input: &str) -> Vec<(Vec<u32>, Vec<u32>)> {
+struct Display {
+    wires: Vec<HashSet<u8>>,
+    display: Vec<HashSet<u8>>,
+    digit_map: HashMap<HashSet<u8>, u8>,
+    output_value: usize,
+}
+
+impl Display {
+    fn new(s: &str) -> Display {
+        let sides: Vec<Vec<HashSet<u8>>> = s
+            .split(" | ")
+            .map(|s| {
+                s.as_bytes().split(|&it| it == b' ')
+                    .map(|&it| {
+                        it.iter().collect::<HashSet<u8>>()
+                    })
+                    .collect()
+            })
+            .collect();
+        let &wires = sides.get(0).unwrap();
+        let &display = sides.get(1).unwrap();
+
+        let mut digit_map = HashMap::new();
+        let wire_groups: HashMap<u8, Vec<HashSet<u8>>> = wires.iter()
+            .group_by(|&wire| wire.len())
+            .collect();
+
+        digit_map.insert(wire_groups.get(&2).unwrap()[0].clone(), 1);
+        digit_map.insert(wire_groups.get(&4).unwrap()[0].clone(), 4);
+        digit_map.insert(wire_groups.get(&7).unwrap()[0].clone(), 7);
+        digit_map.insert(wire_groups.get(&7).unwrap()[0].clone(), 8);
+
+        digit_map.insert(
+            wire_groups.get(&6).unwrap().iter().find(|&&w| w.intersection(digit_map.get(&1)).count() == 1).unwrap().clone(),
+            6,
+        );
+        digit_map.insert(
+            wire_groups.get(&6).unwrap().iter().find(|&&w| w.intersection(digit_map.get(&4)).count() == 4).unwrap().clone(),
+            9,
+        );
+        digit_map.insert(
+            wire_groups.get(&5).unwrap().iter().find(|&&w| w.intersection(digit_map.get(&6)).count() == 5).unwrap().clone(),
+            5,
+        );
+        digit_map.insert(
+            wire_groups.get(&5).unwrap().iter().find(|&&w| w.intersection(digit_map.get(&5)).count() == 3).unwrap().clone(),
+            2,
+        );
+        digit_map.insert(
+            wire_groups.get(&5).unwrap().iter().find(|&&w| w.intersection(digit_map.get(&5)).count() == 4).unwrap().clone(),
+            3,
+        );
+        digit_map.insert(
+            wire_groups.get(&6).unwrap().iter().find(|&&w| w.intersection(digit_map.get(&5)).count() == 4).unwrap().clone(),
+            0,
+        );
+
+        let digit_map: HashMap<_, _> = wire_groups.into_iter()
+            .map(|(k, v)| (v, k))
+            .collect();
+
+        let output_value: Vec<_> = display.iter()
+            .map(|wires| {
+                *digit_map.get(wires).unwrap() as char
+            })
+            .collect();
+
+        let output_value = output_value.parse::<usize>().unwrap();
+
+        Display {
+            wires,
+            display,
+            digit_map,
+            output_value,
+        }
+    }
+}
+
+fn parse_input(input: &str) -> Vec<Display> {
     input
         .lines()
-        .map(|line| {
-            let (inputs, outputs) = line.split_once(" | ").unwrap();
-            (
-                inputs.split_whitespace().map(bitmask).collect(),
-                outputs.split_whitespace().map(bitmask).collect(),
-            )
-        })
+        .map(|line| Display::new(line))
         .collect()
 }
 
-fn default_input() -> Vec<(Vec<u32>, Vec<u32>)> {
+fn default_input() -> Vec<Display> {
     parse_input(include_input!(2021 / 08))
 }
 
-fn bitmask(s: &str) -> u32 {
-    s.bytes().map(|b| 1 << (b - b'a')).fold(0, BitOr::bitor)
-}
-
-fn part1(wires: Vec<(Vec<u32>, Vec<u32>)>) -> usize {
-    wires
-        .into_iter()
-        .flat_map(|(_, outputs)| outputs)
-        .filter(|output| matches!(output.count_ones(), 2 | 3 | 4 | 7))
+fn part1(displays: Vec<Display>) -> usize {
+    displays
+        .iter()
+        .flat_map(|display| display.display)
+        .filter(|display| display.len() < 5 || display.len() > 6)
         .count()
 }
 
-fn part2(wires: Vec<(Vec<u32>, Vec<u32>)>) -> usize {
-    wires
-        .into_iter()
-        .flat_map(|(mut inputs, outputs)| {
-            macro_rules! pop {
-                ($f:expr) => {{
-                    let pos = inputs.iter().position($f).unwrap();
-                    inputs.remove(pos)
-                }};
-            }
-            let one = pop!(|i| i.count_ones() == 2);
-            let seven = pop!(|i| i.count_ones() == 3);
-            let four = pop!(|i| i.count_ones() == 4);
-            let eight = pop!(|i| i.count_ones() == 7);
-            let nine = pop!(|i| i & four == four);
-            let zero = pop!(|i| i.count_ones() == 6 && i & one == one);
-            let three = pop!(|i| i.count_ones() == 5 && i & one == one);
-            let six = pop!(|i| i.count_ones() == 6);
-            let five = pop!(|&i| six & i == i);
-            let two = inputs.remove(0);
-            let nums = [zero, one, two, three, four, five, six, seven, eight, nine];
-            outputs.into_iter().rev().enumerate().map(move |(i, d)| {
-                let pos = nums.iter().position(|n| *n == d).unwrap();
-                pos * 10_usize.pow(i as u32)
-            })
-        })
-        .sum()
+fn part2(displays: Vec<Display>) -> usize {
+    displays
+        .iter()
+        .flat_map(|display| display.display)
+        .filter(|display| display.len() < 5 || display.len() > 6)
+        .count()
 }
 
 fn main() {
@@ -87,6 +134,12 @@ gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone()), 534);
-    assert_eq!(part2(input), 1070188);
+    assert_eq!(part1(input.clone()), 397);
+    assert_eq!(part2(input), 1027422);
 }
+
+// Part 1:                             (10.90 µs)
+// 397
+//
+// Part 2:                             (55.80 µs)
+// 1027422

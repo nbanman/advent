@@ -5,8 +5,8 @@ fn parse_input(input: &str) -> Vec<usize> {
 }
 
 fn solve<F>(numbers: Vec<usize>, comparison_index: F) -> usize
-where
-    F: Fn(usize, usize) -> usize,
+    where
+        F: Fn(usize, usize) -> usize,
 {
     numbers.iter().enumerate()
         .filter(|(index, &i)| {
@@ -15,6 +15,7 @@ where
         .map(|(_, i)| i)
         .sum()
 }
+
 fn default_input() -> Vec<usize> {
     parse_input(include_input!(2017 / 01))
 }
@@ -31,6 +32,7 @@ fn main() {
     let solution = advent::new(default_input).part(part1).part(part2).build();
     solution.cli()
 }
+
 #[test]
 fn default() {
     let input = default_input();

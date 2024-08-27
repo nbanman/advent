@@ -1,10 +1,11 @@
 use std::usize;
+
 use advent::prelude::*;
 
 fn parse_input(input: &str) -> (usize, Vec<usize>) {
-     let codes: Vec<usize> = input.lines()
-         .map(|line| usize::from_str_radix(line, 2).unwrap())
-         .collect();
+    let codes: Vec<usize> = input.lines()
+        .map(|line| usize::from_str_radix(line, 2).unwrap())
+        .collect();
     let bit_length = input.find('\n').unwrap();
     (bit_length, codes)
 }
@@ -38,8 +39,8 @@ fn find_rate(bit_length: usize, codes: &Vec<usize>, target: bool) -> usize {
 }
 
 fn find_rating<F>(bit_length: usize, codes: &Vec<usize>, predicate: F) -> usize
-where
-    F: Fn(isize) -> bool,
+    where
+        F: Fn(isize) -> bool,
 {
     let mut codes = codes.clone();
     for pos in 0..bit_length {
@@ -57,11 +58,12 @@ where
                 }
             }).collect();
         } else {
-            break
+            break;
         }
     }
     *codes.first().unwrap()
 }
+
 fn part1((bit_length, codes): (usize, Vec<usize>)) -> usize {
     let gamma = find_rate(bit_length, &codes, true);
     let epsilon = find_rate(bit_length, &codes, false);

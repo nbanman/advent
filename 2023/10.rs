@@ -28,7 +28,7 @@ fn get_pipe(field: &str) -> Vec<Direction> {
     let mut dir = start_dir;
     loop {
         pos = move_along_pipe(&pos, dir, &field_width);
-        if field[pos] == b'S' { break }
+        if field[pos] == b'S' { break; }
         dir = match field[pos] {
             b'L' | b'7' => if dir.ordinal() & 1 == 1 { dir.right() } else { dir.left() },
             b'J' | b'F' => if dir.ordinal() & 1 == 0 { dir.right() } else { dir.left() },

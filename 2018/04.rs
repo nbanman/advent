@@ -38,11 +38,12 @@ fn parse_input(input: &str) -> HashMap<isize, Vec<[bool; 60]>> {
 
         let entry = guards.entry(id).or_insert(Vec::new());
         entry.push(hour);
-        if index >= log.len() { break }
+        if index >= log.len() { break; }
     }
 
     guards
 }
+
 fn default_input() -> HashMap<isize, Vec<[bool; 60]>> {
     parse_input(include_input!(2018 / 04))
 }
@@ -59,7 +60,7 @@ fn part1(guards: HashMap<isize, Vec<[bool; 60]>>) -> isize {
         .unwrap();
 
     let most_asleep = (0..60)
-        .max_by_key(|&minute| { days.iter().filter(|day| day[minute as usize]).count()})
+        .max_by_key(|&minute| { days.iter().filter(|day| day[minute as usize]).count() })
         .unwrap();
 
     id * most_asleep

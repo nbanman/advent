@@ -73,21 +73,22 @@
 //! crate requires the `json` feature to be set.
 //!
 
-mod human;
-mod stats;
-pub mod summary;
-
 use std::fmt::Display;
 use std::hint;
 use std::panic::UnwindSafe;
 use std::time::{Duration, Instant};
 
 use argh::FromArgs;
-#[cfg(feature = "prelude")]
-pub use prelude;
 use yansi::Paint;
 
+#[cfg(feature = "prelude")]
+pub use prelude;
+
 use crate::summary::{Bench, Run, Summary};
+
+mod human;
+mod stats;
+pub mod summary;
 
 type FnParse<'a, I> = Box<dyn Fn() -> I + 'a>;
 type FnPart<'a, I> = Box<dyn Fn(I) -> Box<dyn Display + 'a> + UnwindSafe + 'a>;
@@ -120,8 +121,8 @@ pub struct Solution<'a, I> {
 /// let solution = advent::new(parse_input);
 /// ```
 pub fn new<'a, F, I>(parse: F) -> Builder<'a, I>
-where
-    F: Fn() -> I + UnwindSafe + 'a,
+    where
+        F: Fn() -> I + UnwindSafe + 'a,
 {
     Builder {
         parse: Some(Box::new(parse)),
@@ -131,17 +132,17 @@ where
 }
 
 impl<'a, I> Builder<'a, I>
-where
-    I: Clone + UnwindSafe,
+    where
+        I: Clone + UnwindSafe,
 {
     /// Adds a part to run or benchmark.
     ///
     /// The closure must take the parsed input as a parameter and return a
     /// result that implements [`Display`].
     pub fn part<F, R>(&mut self, f: F) -> &mut Self
-    where
-        R: Display + 'a,
-        F: Fn(I) -> R + UnwindSafe + 'a,
+        where
+            R: Display + 'a,
+            F: Fn(I) -> R + UnwindSafe + 'a,
     {
         self.parts.push((None, Box::new(move |i| Box::new(f(i)))));
         self
@@ -153,9 +154,9 @@ where
     /// result that implements [`Display`].
     #[doc(hidden)]
     pub fn named<F, R>(&mut self, name: &str, f: F) -> &mut Self
-    where
-        R: Display + 'a,
-        F: Fn(I) -> R + UnwindSafe + 'a,
+        where
+            R: Display + 'a,
+            F: Fn(I) -> R + UnwindSafe + 'a,
     {
         let name = Some(String::from(name));
         self.parts.push((name, Box::new(move |i| Box::new(f(i)))));
@@ -185,8 +186,8 @@ where
 }
 
 impl<'a, I> Solution<'a, I>
-where
-    I: Clone + UnwindSafe,
+    where
+        I: Clone + UnwindSafe,
 {
     /// Consumes this struct and runs the parts.
     pub fn run(self) -> Summary {
@@ -281,16 +282,16 @@ where
 }
 
 fn bench<F, O>(f: F) -> summary::Stats
-where
-    F: Fn() -> O,
+    where
+        F: Fn() -> O,
 {
     bench_with_input((), move |()| f())
 }
 
 fn bench_with_input<F, I, O>(input: I, f: F) -> summary::Stats
-where
-    I: Clone,
-    F: Fn(I) -> O,
+    where
+        I: Clone,
+        F: Fn(I) -> O,
 {
     const FIVE_SECS: Duration = Duration::from_secs(5);
     const THREE_SECS: Duration = Duration::from_secs(3);

@@ -70,7 +70,6 @@ fn part1((start, buses): (i64, Vec<Bus>)) -> i64 {
     if let Some(state) = time_sequence
         .into_iter()
         .find(|state| state.bus_id != 0) {
-
         state.bus_id * (state.time - start)
     } else {
         panic!("No bus found!")
@@ -78,7 +77,7 @@ fn part1((start, buses): (i64, Vec<Bus>)) -> i64 {
 }
 
 fn part2((_, buses): (i64, Vec<Bus>)) -> i64 {
-   let bus = crt(buses);
+    let bus = crt(buses);
     bus.id - bus.offset
 }
 

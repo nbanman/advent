@@ -7,8 +7,8 @@ fn default_input() -> Vec<i64> {
 }
 
 fn solve<F>(mut offsets: Vec<i64>, increment: F) -> i64
-where
-    F: Fn(i64) -> i64,
+    where
+        F: Fn(i64) -> i64,
 {
     let mut i = 0i64;
     let mut steps = 0;
@@ -21,6 +21,7 @@ where
     }
     steps
 }
+
 fn part1(jumps: Vec<i64>) -> i64 {
     solve(jumps, |_| 1)
 }

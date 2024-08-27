@@ -1,4 +1,5 @@
 use advent::prelude::*;
+
 use crate::PassportField::{Byr, Cid, Ecl, Eyr, Hcl, Hgt, Iyr, Pid};
 
 #[derive(Clone, Debug)]
@@ -14,7 +15,6 @@ enum PassportField {
 }
 
 impl PassportField {
-
     fn new(field: &str, info: &str) -> PassportField {
         let info = String::from(info);
         match field {

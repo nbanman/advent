@@ -37,27 +37,26 @@ impl Hand {
     }
 }
 
-fn solve<F>(input: &str, swap_jokers: F) -> usize 
-where F: Fn(&str) -> String
+fn solve<F>(input: &str, swap_jokers: F) -> usize
+    where F: Fn(&str) -> String
 {
     input.lines().filter_map(|line| {
         let (cards, bid) = line.split_once(' ')?;
         let cards = swap_jokers(cards);
-        let hand = Hand { 
-            cards: cards.to_string(), 
-            bid: bid.parse::<usize>().ok()?
+        let hand = Hand {
+            cards: cards.to_string(),
+            bid: bid.parse::<usize>().ok()?,
         };
         Some(hand)
     }).sorted_by_cached_key(|hand| hand.hand_strength())
-    .enumerate()
-    .map(|(index, hand)| {
-        // println!("cards: {}, bid: {}, strength: {}, rank: {}", hand.cards, hand.bid, hand.hand_strength(), index + 1);
-        // println!("{}", hand.cards);
-        (index + 1) * hand.bid 
-    })
-    .sum()
+        .enumerate()
+        .map(|(index, hand)| {
+            // println!("cards: {}, bid: {}, strength: {}, rank: {}", hand.cards, hand.bid, hand.hand_strength(), index + 1);
+            // println!("{}", hand.cards);
+            (index + 1) * hand.bid
+        })
+        .sum()
 }
-
 
 
 fn part1(input: &str) -> usize {
@@ -66,8 +65,8 @@ fn part1(input: &str) -> usize {
 }
 
 fn part2(input: &str) -> usize {
-    let swap_jokers = |cards: &str| -> String { 
-        cards.replace('J', "ĵ") 
+    let swap_jokers = |cards: &str| -> String {
+        cards.replace('J', "ĵ")
     };
     solve(input, swap_jokers)
 }

@@ -47,7 +47,7 @@ fn parse_group(id: Id, s: &str) -> Group {
     }
 }
 
-fn parse_army(faction: Faction, army: &str) -> impl Iterator<Item = Group> + '_ {
+fn parse_army(faction: Faction, army: &str) -> impl Iterator<Item=Group> + '_ {
     army.lines().skip(1).enumerate().map(move |(i, s)| {
         let id = Id {
             faction,

@@ -64,8 +64,8 @@ enum Op {
 }
 
 fn solve<F>(mut monkeys: Vec<Monkey>, rounds: usize, f: F) -> usize
-where
-    F: Fn(usize) -> usize,
+    where
+        F: Fn(usize) -> usize,
 {
     let mut inspects = vec![0; monkeys.len()];
 

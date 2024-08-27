@@ -25,7 +25,7 @@ fn parse_input(data: &str) -> Image {
         .collect();
     let y_galaxies: Vec<(usize, usize)> = (0..height).into_iter()
         .map(|y| {
-            let count = &data[y * width .. y * width + width].chars()
+            let count = &data[y * width..y * width + width].chars()
                 .filter(|c| *c == '#')
                 .count();
             (y, *count)
@@ -65,7 +65,7 @@ fn solve(image: &Image, expansion_factor: usize) -> usize {
 fn distance(
     expansion_factor: usize,
     galaxies: &Vec<(usize, usize)>,
-    expansions: &Vec<usize>
+    expansions: &Vec<usize>,
 ) -> usize {
     galaxies.iter().enumerate()
         .map(|(i, (a_pos, a_count))| {
@@ -118,6 +118,7 @@ fn example1() {
     assert_eq!(part1(parse_input(input)), 374);
     assert_eq!(part2(parse_input(input)), 82000210);
 }
+
 #[test]
 fn default() {
     let input = default_input();

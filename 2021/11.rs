@@ -21,7 +21,6 @@ fn default_input() -> (Vec<u8>, isize) {
 }
 
 fn flash(cave: &mut Vec<u8>, width: isize) -> usize {
-
     let vecs = vec![-width - 1, -width, -width + 1, -1, 1, width - 1, width, width + 1];
 
     for cell in cave.iter_mut() {
@@ -39,7 +38,7 @@ fn flash(cave: &mut Vec<u8>, width: isize) -> usize {
                 }
             })
             .collect();
-        if flasher_indices.is_empty() { break }
+        if flasher_indices.is_empty() { break; }
 
         for &idx in flasher_indices.iter() {
             if let Some(flasher) = cave.get_mut(idx) {
@@ -92,6 +91,7 @@ fn part2((mut cave, width): (Vec<u8>, isize)) -> usize {
         .unwrap()
         .0
 }
+
 fn main() {
     let solution = advent::new(default_input).part(part1).part(part2).build();
     solution.cli()

@@ -17,6 +17,7 @@ const DIAGONALS: [Vector<i64, 2>; 8] = [
     Vector2::new(-1, 1),
     Vector2::new(-1, 0),
 ];
+
 fn parse_input(input: &str) -> usize {
     input.trim_end().parse().unwrap()
 }
@@ -51,7 +52,7 @@ fn part2(input: usize) -> usize {
                     space.get(&neighbor).unwrap_or(&0)
                 })
                 .sum::<i64>() as usize;
-            if square_val > input { return square_val }
+            if square_val > input { return square_val; }
             space.insert(pos, square_val as i64);
         }
     }

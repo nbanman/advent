@@ -22,6 +22,7 @@ fn parse_input(input: &str) -> Vec<(usize, isize)> {
 fn default_input() -> Vec<(usize, isize)> {
     parse_input(include_input!(2022 / 10))
 }
+
 fn part1(cpu: Vec<(usize, isize)>) -> isize {
     cpu.into_iter()
         .filter(|(cycle, _)| (cycle + 19) % 40 == 0)

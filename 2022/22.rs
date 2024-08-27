@@ -1,4 +1,5 @@
 use advent::prelude::*;
+use Direction::*;
 
 fn parse_input(input: &str) -> (HashMap<Vector2, Tile>, Vec<Instr>) {
     let (map, path) = input.split_once("\n\n").unwrap();
@@ -51,8 +52,6 @@ enum Direction {
     Left = 2,
     Up = 3,
 }
-
-use Direction::*;
 
 impl Direction {
     fn vector(self) -> Vector2 {
@@ -122,8 +121,8 @@ fn wrap_cube(_: &HashMap<Vector2, Tile>, pos: Vector2, d: Direction) -> (Vector2
 }
 
 fn solve<W>(map: HashMap<Vector2, Tile>, instrs: Vec<Instr>, wrap: W) -> i64
-where
-    W: Fn(&HashMap<Vector2, Tile>, Vector2, Direction) -> (Vector2, Direction),
+    where
+        W: Fn(&HashMap<Vector2, Tile>, Vector2, Direction) -> (Vector2, Direction),
 {
     let start_x = map
         .iter()

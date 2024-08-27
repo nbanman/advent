@@ -43,7 +43,7 @@ fn to_number(mask: &[u8], x: i64) -> i64 {
 }
 
 /// Returns all combinations of an address after applying the given mask.
-fn combinations(addr: i64, mask: &[u8]) -> Box<dyn Iterator<Item = i64>> {
+fn combinations(addr: i64, mask: &[u8]) -> Box<dyn Iterator<Item=i64>> {
     // In the base case we return the unchanged address.
     if mask.is_empty() {
         return Box::new([addr].into_iter());
@@ -62,15 +62,15 @@ fn combinations(addr: i64, mask: &[u8]) -> Box<dyn Iterator<Item = i64>> {
             b'X' => Either::Right([addr, addr ^ bit]),
             b => panic!("unexpected mask value `{b}`"),
         }
-        .into_iter()
+            .into_iter()
     });
     Box::new(addrs)
 }
 
 fn solve<F, M>(instrs: Vec<Instr<'_>>, f: F) -> i64
-where
-    F: Fn(&[u8], i64, i64) -> M,
-    M: IntoIterator<Item = (i64, i64)>,
+    where
+        F: Fn(&[u8], i64, i64) -> M,
+        M: IntoIterator<Item=(i64, i64)>,
 {
     let mut memory = HashMap::new();
     let mut mask = DEFAULT_MASK;

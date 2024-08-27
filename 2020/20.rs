@@ -152,7 +152,8 @@ fn assemble(tiles: HashMap<i64, Tile>) -> HashSet<Vector2> {
     place! {
         (0, 0), tiles.keys(),
         where |tile| is_border(tile.left()) && is_border(tile.top())
-    };
+    }
+    ;
 
     // Now that we have the corner we can populate the rest of the first row
     // purely based on the tile to the left.
@@ -162,7 +163,8 @@ fn assemble(tiles: HashMap<i64, Tile>) -> HashSet<Vector2> {
         place! {
             (i, j), edges[&prev].iter(),
             where |tile| tile.left() == prev && is_border(tile.top())
-        };
+        }
+        ;
     }
 
     // Now that we have the corner we can populate the rest of the first column
@@ -173,7 +175,8 @@ fn assemble(tiles: HashMap<i64, Tile>) -> HashSet<Vector2> {
         place! {
             (i, j), edges[&above].iter(),
             where |tile| tile.top() == above && is_border(tile.left())
-        };
+        }
+        ;
     }
 
     // Now that we have the first row and column we can populate the rest of the
@@ -184,7 +187,8 @@ fn assemble(tiles: HashMap<i64, Tile>) -> HashSet<Vector2> {
         place! {
             (i, j), edges[&prev].iter(),
             where |tile| tile.left() == prev && tile.top() == above
-        };
+        }
+        ;
     }
 
     // Remove the borders and convert the tiles to a single image.

@@ -1,7 +1,7 @@
-mod device;
-
 use advent::prelude::*;
 use device::{compute, parse_program, Program};
+
+mod device;
 
 fn default_input() -> Program {
     parse_program(include_input!(2018 / 21))

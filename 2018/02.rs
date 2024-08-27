@@ -2,6 +2,7 @@ extern crate core;
 
 use core::str;
 use std::str::SplitWhitespace;
+
 use advent::prelude::*;
 
 fn parse_input(input: &str) -> SplitWhitespace<'_> {
@@ -43,11 +44,11 @@ fn part2(box_ids: SplitWhitespace<'_>) -> String {
                 if !diffs {
                     diffs = true
                 } else {
-                    return false
+                    return false;
                 }
             }
         }
-        return diffs
+        return diffs;
     }
     let box_ids: Vec<_> = box_ids.collect();
     for (&a, &b) in box_ids[..box_ids.len() - 1].iter().cartesian_product(box_ids[1..].iter()) {
@@ -56,7 +57,7 @@ fn part2(box_ids: SplitWhitespace<'_>) -> String {
             let x: Vec<_> = x
                 .filter_map(|(a, b)| if a == b { Some(*a) } else { None })
                 .collect();
-            return String::from_utf8(x).unwrap()
+            return String::from_utf8(x).unwrap();
         }
     }
     unreachable!()

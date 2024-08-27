@@ -1,4 +1,5 @@
 use std::ops::RangeInclusive;
+
 use advent::prelude::*;
 
 #[derive(Clone)]
@@ -23,9 +24,11 @@ impl PassPolicy<'_> {
 fn parse_input(s: &str) -> Vec<PassPolicy<'_>> {
     s.lines()
         .map(|line| {
-            let (lower, remainder) = line.split_once(['-', ' ']).unwrap();
-            let (upper, remainder) = remainder.split_once(['-', ' ']).unwrap();
-            let (letter, password) = remainder.split_once(['-', ' ']).unwrap();
+            let mut split = line.split(&['-', ' ']);
+            let (Some(lower), Some(upper), Some(letter), Some(password), None) =
+                (split.next(), split.next(), split.next(), split.next(), split.next()) else {
+                panic!("Invalid input!");
+            };
             let lower = lower.parse().unwrap();
             let upper = upper.parse().unwrap();
             let range = lower..=upper;
@@ -68,6 +71,7 @@ fn example() {
     assert_eq!(part1(input.clone()), 2);
     assert_eq!(part2(input), 1);
 }
+
 #[test]
 fn default() {
     let input = default_input();

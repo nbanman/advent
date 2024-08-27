@@ -9,11 +9,12 @@ fn default_input() -> Vec<Vec<usize>> {
 }
 
 fn solve<F>(spreadsheet: Vec<Vec<usize>>, line_operation: F) -> usize
-where
-    F: Fn(Vec<usize>) -> usize,
+    where
+        F: Fn(Vec<usize>) -> usize,
 {
     spreadsheet.into_iter().map(|row| line_operation(row)).sum()
 }
+
 fn part1(spreadsheet: Vec<Vec<usize>>) -> usize {
     solve(spreadsheet, |row| {
         let (min, max) = min_max(&row);
@@ -62,6 +63,7 @@ fn example2() {
     );
     assert_eq!(part2(input), 9)
 }
+
 #[test]
 fn default() {
     let input = default_input();

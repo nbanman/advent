@@ -1,28 +1,21 @@
 use advent::prelude::*;
 
-fn parse_input(input: &str) -> Vec<usize> {
-    input
-        .trim()
-        .split(',')
-        .map(str::parse)
-        .map(Result::unwrap)
-        .collect()
-}
+fn parse_input(input: &str) -> Vec<usize> { get_numbers(input) }
 
 fn default_input() -> Vec<usize> {
     parse_input(include_input!(2021 / 06))
 }
 
 fn solve(fish: Vec<usize>, days: usize) -> usize {
-    let mut counts = [0; 9];
+    let mut fish_by_days = [0usize; 9];
     for age in fish {
-        counts[age] += 1;
+        fish_by_days[age] += 1;
     }
     for _ in 0..days {
-        counts.rotate_left(1);
-        counts[6] += counts[8];
+        fish_by_days.rotate_left(1);
+        fish_by_days[6] += fish_by_days[8];
     }
-    counts.iter().sum()
+    fish_by_days.into_iter().sum()
 }
 
 fn part1(fish: Vec<usize>) -> usize {
@@ -48,6 +41,6 @@ fn example() {
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone()), 360610);
-    assert_eq!(part2(input), 1631629590423);
+    assert_eq!(part1(input.clone()), 361169);
+    assert_eq!(part2(input), 1634946868992);
 }

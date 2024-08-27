@@ -31,7 +31,7 @@ fn default_input() -> (PropagationRules, ProteinPairs, (u8, u8)) {
 
 fn solve(
     (progagation_rules, protein_pairs, edge_proteins): (PropagationRules, ProteinPairs, (u8, u8)),
-    steps: usize
+    steps: usize,
 ) -> usize {
     let polymerized = polymerize(protein_pairs, steps, &progagation_rules);
     let count = count_proteins(polymerized, edge_proteins);
@@ -40,7 +40,7 @@ fn solve(
 }
 
 fn polymerize(
-    protein_pairs: ProteinPairs, steps: usize, propagation_rules: &PropagationRules
+    protein_pairs: ProteinPairs, steps: usize, propagation_rules: &PropagationRules,
 ) -> ProteinPairs {
     if steps == 0 {
         protein_pairs

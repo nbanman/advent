@@ -18,7 +18,7 @@ fn part2(initial: Vec<Vec<char>>) -> usize {
     let mut index = 0_usize;
     let first_index_of_cycle = loop {
         if let Some(first_index_of_cycle) = rock_formations.insert(rocks.clone(), index) {
-            break first_index_of_cycle
+            break first_index_of_cycle;
         }
         rocks = spin_cycle(&rocks);
         index += 1;
@@ -44,11 +44,11 @@ fn tilt_up(rocks: &Vec<Vec<char>>) -> Vec<Vec<char>> {
                         let next = yy as isize - 1;
                         if next < 0 || "#O".contains(tilted[next as usize][x]) {
                             tilted[yy][x] = 'O';
-                            break
+                            break;
                         }
                     }
-                },
-                _ => { },
+                }
+                _ => {}
             }
         })
     });

@@ -1,4 +1,5 @@
 use std::ops::RangeInclusive;
+
 use advent::prelude::*;
 
 fn parse_input(input: &str) -> Vec<(Vector2, Vector2)> {
@@ -33,7 +34,7 @@ fn to_string(points: &[(Vector2, Vector2)]) -> String {
     s
 }
 
-fn min_max_ranges<'a>(vectors: impl Iterator<Item = &'a Vector2>) -> (RangeInclusive<i64>, RangeInclusive<i64>) {
+fn min_max_ranges<'a>(vectors: impl Iterator<Item=&'a Vector2>) -> (RangeInclusive<i64>, RangeInclusive<i64>) {
     let mut min_x = i64::MAX;
     let mut max_x = i64::MIN;
     let mut min_y = i64::MAX;

@@ -3,6 +3,7 @@ use advent::prelude::*;
 fn default_input() -> usize {
     include_input!(2018 / 11).trim().parse().unwrap()
 }
+
 const LENGTH: usize = 300;
 
 struct Square {

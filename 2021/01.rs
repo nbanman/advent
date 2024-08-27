@@ -5,8 +5,8 @@ fn parse_input(input: &str) -> Vec<usize> {
 }
 
 fn count_increased<I>(measurements: I) -> usize
-where
-    I: Iterator<Item = usize>,
+    where
+        I: Iterator<Item=usize>,
 {
     measurements
         .array_windows()

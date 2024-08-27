@@ -1,8 +1,12 @@
 use advent::prelude::*;
 
 enum Dir {
-    U, D, L, R
+    U,
+    D,
+    L,
+    R,
 }
+
 fn parse_input(input: &str) -> Vec<&str> {
     input.trim_end().lines().collect()
 }

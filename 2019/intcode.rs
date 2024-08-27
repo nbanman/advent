@@ -11,9 +11,9 @@ use std::str::FromStr;
 use thiserror::Error;
 
 pub fn parse_program<T>(input: &str) -> Vec<T>
-where
-    T: FromStr,
-    T::Err: Debug,
+    where
+        T: FromStr,
+        T::Err: Debug,
 {
     input
         .trim()
@@ -73,7 +73,7 @@ impl Computer {
         self
     }
 
-    pub fn feed(&mut self, iter: impl IntoIterator<Item = i64>) {
+    pub fn feed(&mut self, iter: impl IntoIterator<Item=i64>) {
         self.input.extend(iter);
     }
 

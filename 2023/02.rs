@@ -1,5 +1,6 @@
-use advent::prelude::*;
 use std::collections::HashMap;
+
+use advent::prelude::*;
 
 fn parse_input(input: &str) -> Vec<HashMap<String, u32>> {
     let pattern = regex!(r"(\d+) (\w+)");

@@ -1,7 +1,7 @@
-mod device;
-
 use advent::prelude::*;
 use device::{compute, Op};
+
+mod device;
 
 fn parse_nums(s: &str) -> [usize; 4] {
     s.split_whitespace()
@@ -39,7 +39,7 @@ struct Sample {
 
 impl Op {
     #[rustfmt::skip]
-    fn iter() -> impl Iterator<Item = Self> {
+    fn iter() -> impl Iterator<Item=Self> {
         [
             Op::Addr, Op::Addi,
             Op::Mulr, Op::Muli,
@@ -49,7 +49,7 @@ impl Op {
             Op::Gtir, Op::Gtri, Op::Gtrr,
             Op::Eqir, Op::Eqri, Op::Eqrr,
         ]
-        .into_iter()
+            .into_iter()
     }
 }
 

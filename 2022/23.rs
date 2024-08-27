@@ -18,8 +18,8 @@ const SE: Vector2 = vector![1, 1];
 const SW: Vector2 = vector![-1, 1];
 
 fn solve<I>(mut grove: HashSet<Vector2>, rounds: I) -> i64
-where
-    I: Iterator<Item = usize>,
+    where
+        I: Iterator<Item=usize>,
 {
     // All the possible directions from an elf
     let all = [N, S, E, W, NE, NW, SE, SW];

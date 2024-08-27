@@ -1,4 +1,5 @@
 use std::fmt::{Display, Formatter};
+
 use advent::prelude::*;
 
 #[derive(Copy, Clone)]
@@ -13,7 +14,7 @@ impl Hexagon {
         Hexagon { q, r, s: -q - r }
     }
 
-    fn origin() -> Hexagon { Hexagon { q: 0, r: 0, s: 0, } }
+    fn origin() -> Hexagon { Hexagon { q: 0, r: 0, s: 0 } }
 
     fn hex_at(&self, step: &str) -> Hexagon {
         match step {
@@ -30,7 +31,7 @@ impl Hexagon {
     fn distance(&self, other: &Hexagon) -> usize {
         let v = Hexagon::new(
             self.q - other.q,
-            self.r - other.r
+            self.r - other.r,
         );
         max(max(v.q.abs(), v.r.abs()), v.s.abs()) as usize
     }
@@ -41,6 +42,7 @@ impl Display for Hexagon {
         write!(f, "Hexagon(q: {}, r: {}, s: {})", self.q, self.r, self.s)
     }
 }
+
 fn parse_input(input: &str) -> Vec<Hexagon> {
     input.trim_end().split(',')
         .scan(Hexagon::origin(), |state, direction| {

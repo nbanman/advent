@@ -17,6 +17,7 @@ either = "1.9.0"
 itermore = "0.5.0"
 itertools = "0.12.0"
 open = "5.0.1"
+pathfinding = "4.9.1"
 rand = "0.8.5"
 regex-macro = "0.2.0"
 serde = { version = "1.0.193", features = ["derive"] }
@@ -36,12 +37,74 @@ publish = false
 thiserror = { workspace = true }
 vectrix = { workspace = true }
 advent = { path = "crates/advent", features = ["festive", "prelude"] }
+itertools = "0.12.0"
+regex = "1.5.6"
 
 [features]
 json = ["advent/json"]
 
 [lints]
 workspace = true
+
+[[bin]]
+name = "201701"
+path = "2017/01.rs"
+
+[[bin]]
+name = "201702"
+path = "2017/02.rs"
+
+[[bin]]
+name = "201703"
+path = "2017/03.rs"
+
+[[bin]]
+name = "201704"
+path = "2017/04.rs"
+
+[[bin]]
+name = "201705"
+path = "2017/05.rs"
+
+[[bin]]
+name = "201706"
+path = "2017/06.rs"
+
+[[bin]]
+name = "201709"
+path = "2017/09.rs"
+
+[[bin]]
+name = "201710"
+path = "2017/10.rs"
+
+[[bin]]
+name = "201711"
+path = "2017/11.rs"
+
+[[bin]]
+name = "201712"
+path = "2017/12.rs"
+
+[[bin]]
+name = "201713"
+path = "2017/13.rs"
+
+[[bin]]
+name = "201715"
+path = "2017/15.rs"
+
+[[bin]]
+name = "201717"
+path = "2017/17.rs"
+
+[[bin]]
+name = "201718"
+path = "2017/18.rs"
+
+[[bin]]
+name = "201719"
+path = "2017/19.rs"
 
 [[bin]]
 name = "201801"
@@ -582,3 +645,43 @@ path = "2023/08.rs"
 [[bin]]
 name = "202309"
 path = "2023/09.rs"
+
+[[bin]]
+name = "202310"
+path = "2023/10.rs"
+
+[[bin]]
+name = "202311"
+path = "2023/11.rs"
+
+[[bin]]
+name = "202312"
+path = "2023/12.rs"
+
+[[bin]]
+name = "202313"
+path = "2023/13.rs"
+
+[[bin]]
+name = "202314"
+path = "2023/14.rs"
+
+[[bin]]
+name = "202315"
+path = "2023/15.rs"
+
+[[bin]]
+name = "202317"
+path = "2023/17.rs"
+
+[[bin]]
+name = "202318"
+path = "2023/18.rs"
+
+[[bin]]
+name = "202319"
+path = "2023/19.rs"
+
+[[bin]]
+name = "202321"
+path = "2023/21.rs"

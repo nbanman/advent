@@ -1,4 +1,5 @@
 use advent::prelude::*;
+
 use crate::Seat::{EmptySpace, Occupied, Unoccupied};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -14,10 +15,11 @@ impl Seat {
             b'#' => Occupied,
             b'L' => Unoccupied,
             b'.' => EmptySpace,
-            c    => panic!("Input contains unrecognized char: {}", c as char)
+            c => panic!("Input contains unrecognized char: {}", c as char)
         }
     }
 }
+
 type Grid = (Vec<Seat>, usize);
 
 fn parse_input(input: &str) -> Grid {
@@ -47,8 +49,8 @@ const DIRECTIONS: [(isize, isize); 8] = [
 ];
 
 fn solve<F>(grid: Grid, tolerance: usize, get_neighbors: F) -> usize
-where
-    F: Fn(&Grid, usize) -> usize,
+    where
+        F: Fn(&Grid, usize) -> usize,
 {
     let (new_grid, _) = iter::successors(Some(grid), |acc| {
         let layout = acc.0

@@ -18,7 +18,7 @@ fn part2(initialization: Vec<&'static str>) -> usize {
     let mut boxes: [HashMap<&str, (usize, usize)>; 256] = std::array::from_fn(|_| HashMap::new());
     initialization.into_iter().enumerate().for_each(|(index, step)| {
         let (label, operation) = step.split_once(|c: char| !c.is_ascii_alphabetic())
-           .unwrap();
+            .unwrap();
         let box_number = hash_of(label);
         if operation == "" {
             boxes[box_number].remove(label);
@@ -55,6 +55,7 @@ fn example1() {
     assert_eq!(part1(parse_input(input)), 1320);
     assert_eq!(part2(parse_input(input)), 145);
 }
+
 #[test]
 fn default() {
     let input = default_input();

@@ -44,7 +44,7 @@ fn next(pots: BTreeSet<i32>, rules: &[i32]) -> BTreeSet<i32> {
             .fold(0, |acc, b| acc * 2 + b);
         rules.contains(&w)
     })
-    .collect()
+        .collect()
 }
 
 fn part1((mut pots, rules): (BTreeSet<i32>, Vec<i32>)) -> i32 {

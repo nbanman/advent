@@ -2,9 +2,9 @@
 //!
 //! See https://redd.it/egq9xn
 
-mod intcode;
+use crate::intcode::{Computer, parse_program, State};
 
-use crate::intcode::{parse_program, Computer, State};
+mod intcode;
 
 #[inline(never)]
 fn bench(program: Vec<i64>, input: &[i64]) -> i64 {

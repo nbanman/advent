@@ -11,6 +11,8 @@ itermore = { workspace = true }
 itertools = { workspace = true }
 regex-macro = { workspace = true }
 vectrix = { workspace = true }
+pathfinding = { workspace = true }
+
 then = { version = "0.1.0", path = "../then" }
 
 [lints]

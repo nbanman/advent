@@ -5,6 +5,7 @@ struct Claim {
     tl: Vector2,
     br: Vector2,
 }
+
 fn parse_input(input: &str) -> (Vec<Claim>, Vec<i64>, i64) {
     let claims: Vec<_> = input
         .get_numbers()
@@ -55,6 +56,7 @@ fn main() {
     let solution = advent::new(default_input).part(part1).part(part2).build();
     solution.cli()
 }
+
 #[test]
 fn example() {
     let input = parse_input(

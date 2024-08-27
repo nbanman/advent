@@ -13,7 +13,7 @@ fn default_input() -> Vec<(Vector2, Vector2)> {
 }
 
 fn straight_range(
-    (a, b): (Vector2, Vector2), include_diagonals: bool
+    (a, b): (Vector2, Vector2), include_diagonals: bool,
 ) -> Vec<Vector2> {
     let mut range = Vec::new();
     if a.x == b.x {
@@ -45,7 +45,7 @@ fn straight_range(
     range
 }
 
-fn solve(input: impl Iterator<Item = (Vector2, Vector2)>, include_diagonals: bool) -> usize {
+fn solve(input: impl Iterator<Item=(Vector2, Vector2)>, include_diagonals: bool) -> usize {
     let mut counter: HashMap<Vector2, usize> = HashMap::new();
     input
         .flat_map(|line| straight_range(line, include_diagonals))

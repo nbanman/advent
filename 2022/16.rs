@@ -1,48 +1,39 @@
 use advent::prelude::*;
+use pathfinding::prelude::dijkstra_all;
 
-fn parse_input(input: &str) -> Vec<Valve> {
-    let re = regex!(
-        r"Valve (?P<name>[A-Z]+) has flow rate=(?P<fr>\d+); tunnels? leads? to valves? (?P<leads>.*)"
-    );
+fn parse_input(input: &str) -> (HashMap<String, usize>, HashMap<String, HashMap<String, usize>>) {
+    // parse to edgeMapNoValves and flowRate maps
+    let mut edge_map: HashMap<String, Vec<(String, usize)>> = HashMap::new();
+    let mut flow_map = HashMap::new();
+    let rx = regex!(r"Valve (\w+) has flow rate=(\d+); tunnels? leads? to valves? (.*)");
+    rx.captures_iter(input).for_each(|caps| {
+        let name: &str = caps.get(1).unwrap().as_str();
+        let flow_rate: usize = caps.get(2).unwrap().as_str().parse().unwrap();
+        // : Vec<Edge<String>>
+        let tunnels: Vec<(String, usize)> = caps.get(2).unwrap().as_str()
+            .split(", ")
+            .map(|id| (id.to_string(), 1usize))
+            .collect();
+        flow_map.insert(name.to_string(), flow_rate);
+        edge_map.insert(name.to_string(), tunnels);
+    });
 
-    let specs: Vec<_> = input
-        .lines()
-        .map(|line| {
-            let caps = re.captures(line).unwrap();
-            let name = caps.name("name").unwrap().as_str();
-            let leads_to: Vec<_> = caps.name("leads").unwrap().as_str().split(", ").collect();
-            let flow_rate = caps.name("fr").unwrap().as_str().parse().unwrap();
-            (name, leads_to, flow_rate)
+    // get point to point info on all the points
+    let test = edge_map.iter()
+        .filter(|(&valve, _)| {
+            valve.as_str() == "AA" || flow_map.get_or(valve.as_str(), 0) > 0
         })
-        .collect();
+        .for_each(|(&valve, _)| {
+            let points = dijkstra_all(&valve, |x| {
+                edge_map.get(x).unwrap()
+            });
+            edge_map.insert(valve.clone(), points);
+        });
 
-    // Convert each valve to a bit so that we can use bitmasks to represent
-    // multiple valves. We do this by simply sorting the valves by name and
-    // using the sorted index as the bit. For example: AA will be a number with
-    // bit 0 set, BB will be a number with bit 1 set etc.
-    let ids: HashMap<&str, usize> = specs
-        .iter()
-        .map(|(name, _, _)| name)
-        .sorted()
-        .enumerate()
-        .map(|(i, &v)| (v, 1 << i))
-        .collect();
-
-    specs
-        .into_iter()
-        .map(|(name, leads_to, flow_rate)| {
-            let id = ids[name];
-            let leads_to = leads_to.into_iter().map(|n| ids[n]).collect();
-            Valve {
-                id,
-                flow_rate,
-                leads_to,
-            }
-        })
-        .collect()
+    (flow_map, edge_map)
 }
 
-fn default_input() -> Vec<Valve> {
+fn default_input() -> (HashMap<String, usize>, HashMap<String, HashMap<String, usize>>) {
     parse_input(include_input!(2022 / 16))
 }
 
@@ -78,13 +69,9 @@ fn distances(valves: &[Valve]) -> Option<Graph> {
         }
     }
 
-    for k in &all {
-        for i in &all {
-            for j in &all {
-                let m = min(graph[i][j], graph[i][k] + graph[k][j]);
-                *graph.get_mut(i)?.get_mut(j)? = m;
-            }
-        }
+    for (k, i, j) in iproduct!(&all, &all, &all) {
+        let m = min(graph[i][j], graph[i][k] + graph[k][j]);
+        *graph.get_mut(i)?.get_mut(j)? = m;
     }
     Some(graph)
 }

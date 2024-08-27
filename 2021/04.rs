@@ -1,91 +1,96 @@
+use std::iter::Flatten;
+use std::slice::Iter;
+
 use advent::prelude::*;
 
-type Board = Matrix<(i64, bool), 5, 5>;
-
-fn parse_input(input: &str) -> (Vec<i64>, Vec<Board>) {
-    let (draws, boards) = input.split_once("\n\n").unwrap();
-    let draws = draws
-        .split(',')
-        .map(str::parse)
-        .map(Result::unwrap)
-        .collect();
-    let boards = boards
-        .split("\n\n")
-        .map(|board| {
-            board
-                .lines()
-                .flat_map(|line| {
-                    line.split_whitespace()
-                        .map(str::parse)
-                        .map(Result::unwrap)
-                        .map(|n| (n, false))
-                })
-                .collect()
-        })
-        .collect();
-    (draws, boards)
+struct BingoCard {
+    board: Vec<Vec<u8>>,
+    win_conditions: Vec<HashSet<u8>>,
 }
 
-fn default_input() -> (Vec<i64>, Vec<Board>) {
+impl BingoCard {
+    fn new(board: &'static str) -> BingoCard {
+        let board = board.as_bytes();
+        let width = board.iter().position(|c| c == &b'\n').unwrap();
+        let height = board.len() / (width + 1);
+        let board: Vec<Vec<u8>> = (0..height)
+            .map(|row| {
+                (0..width).map(|col| {
+                    board[col + width * row]
+                })
+                    .collect()
+            })
+            .collect();
+        let columns = (0..width)
+            .map(|col| {
+                board.iter().map(|row| *row.get(col).unwrap()).collect()
+            })
+            .collect();
+        let win_conditions: Vec<HashSet<u8>> = [board.clone(), columns]
+            .concat()
+            .iter()
+            .map(|&v| {
+                let x = v.into_iter().collect::<HashSet<_>>();
+                x
+            })
+            .collect();
+        BingoCard { board, win_conditions }
+    }
+
+    fn bingo(&self, called_numbers: Vec<u8>) -> bool {
+        let called_numbers: HashSet<u8> = called_numbers.into_iter().collect();
+        self.win_conditions.iter().any(|set| set.intersection(called_numbers).collect() == set)
+    }
+
+    fn score(&self, called_numbers: &Vec<u8>) -> usize {
+        let board_total: Flatten<Iter<Vec<u8>>> = self.board.iter().flatten();
+        let called_numbers: &HashSet<u8> = called_numbers.into_iter().collect();
+        board_total.clone().sum() - called_numbers.intersection(board_total.collect())
+    }
+}
+
+fn parse_input(input: &str) -> (Vec<u8>, Vec<BingoCard>) {
+    let (draw_pile, cards) = input.split_once("\n\n").unwrap();
+    let draw_pile: Vec<u8> = draw_pile.split(',').map(|d| d.parse().unwrap()).collect();
+    let cards = cards.split("\n\n").map(|card| BingoCard::new(card)).collect();
+    (draw_pile, cards)
+}
+
+fn default_input() -> (Vec<u8>, Vec<BingoCard>) {
     parse_input(include_input!(2021 / 04))
 }
 
-fn update(board: Board, d: i64) -> Board {
-    board
-        .into_iter()
-        .map(|(n, marked)| (n, marked || n == d))
-        .collect()
+fn part1((draw_pile, cards): (Vec<u8>, Vec<BingoCard>)) -> usize {
+    let mut called_numbers: &Vec<u8> = &draw_pile[..4].iter().collect();
+    let bingo_card: Vec<_> = draw_pile.iter()
+        .dropping(4)
+        .filter_map(|&n| {
+            called_numbers.push(n);
+            cards.iter().find(|&card| card.bingo(called_numbers.clone()))
+        })
+        .collect();
+    let bingo_card = bingo_card.first().unwrap();
+    bingo_card.score(called_numbers) * *called_numbers.last().unwrap() as usize
 }
 
-fn is_win(board: &Board) -> bool {
-    let row_win = board
-        .iter_rows()
-        .any(|row| row.iter().all(|(_, marked)| *marked));
-    let col_win = board
-        .iter_columns()
-        .any(|col| col.iter().all(|(_, marked)| *marked));
-    row_win || col_win
-}
-
-fn score(board: &Board, d: i64) -> i64 {
-    let sum: i64 = board
-        .iter()
-        .filter(|(_, marked)| !marked)
-        .map(|(n, _)| n)
-        .sum();
-    sum * d
-}
-
-fn part1((draws, mut boards): (Vec<i64>, Vec<Board>)) -> i64 {
-    for d in draws {
-        for board in boards.iter_mut() {
-            *board = update(*board, d);
-            if is_win(board) {
-                return score(board, d);
-            }
-        }
-    }
-    unreachable!()
-}
-
-fn part2((draws, mut boards): (Vec<i64>, Vec<Board>)) -> i64 {
-    for d in draws {
-        if let [board] = *boards {
-            return score(&update(board, d), d);
-        }
-        boards = boards
-            .into_iter()
-            .map(|board| update(board, d))
-            .filter(|board| !is_win(board))
-            .collect();
-    }
-    unreachable!()
+fn part2((draw_pile, cards): (Vec<u8>, Vec<BingoCard>)) -> usize {
+    let mut called_numbers: &Vec<u8> = &draw_pile[..4].iter().collect();
+    let bingo_card: Vec<_> = draw_pile.iter()
+        .dropping(4)
+        .filter_map(|&n| {
+            called_numbers.push(n);
+            cards.iter().find(|&card| card.bingo(called_numbers.clone()))
+        })
+        .collect();
+    let bingo_card = bingo_card.first().unwrap();
+    bingo_card.score(called_numbers) * *called_numbers.last().unwrap() as usize
 }
 
 fn main() {
     let solution = advent::new(default_input).part(part1).part(part2).build();
     solution.cli()
 }
+
 #[test]
 fn example() {
     let input = parse_input(
@@ -117,6 +122,12 @@ fn example() {
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input.clone()), 55770);
-    assert_eq!(part2(input), 2980);
+    assert_eq!(part1(input.clone()), 39902);
+    assert_eq!(part2(input), 15573);
 }
+
+// Part 1:                             (363.5 µs)
+// 39902
+//
+// Part 2:                             (755.6 µs)
+// 15573

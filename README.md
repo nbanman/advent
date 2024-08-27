@@ -1,8 +1,9 @@
 # advent
 
-This is a 12/1/2023 fork of [Ross MacArthur's Advent of Code run environment](https://github.com/rossmacarthur/advent/). He shared his runner but I'm new to Rust and had 
+This is a 12/1/2023 fork of [Ross MacArthur's Advent of Code run environment](https://github.com/rossmacarthur/advent/).
+He shared his runner but I'm new to Rust and had
 trouble extricating the library tool. So I just cloned the entire repo and will be using it as the
-basis for my solutions. All solutions prior to 2023 are his, maybe I will delete them or do 
+basis for my solutions. All solutions prior to 2023 are his, maybe I will delete them or do
 something with them later.
 
 Below is his readme as of 12/1/2023. Thanks, Ross!
@@ -107,11 +108,10 @@ solutions in this crate for an example.
 Run and benchmark output:
 
 <img width="382" alt="screenshot of run output"
-       src="https://user-images.githubusercontent.com/17109887/206855331-d5f2ee15-0245-40c8-a673-be4f89a225c4.png">
+src="https://user-images.githubusercontent.com/17109887/206855331-d5f2ee15-0245-40c8-a673-be4f89a225c4.png">
 
 <img width="380" alt="screenshot of bench output"
-       src="https://user-images.githubusercontent.com/17109887/206855396-26d868b1-a9e9-414d-b655-9b979e091b4e.png">
-
+src="https://user-images.githubusercontent.com/17109887/206855396-26d868b1-a9e9-414d-b655-9b979e091b4e.png">
 
 ### Features
 

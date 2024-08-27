@@ -1,18 +1,19 @@
 pub use std::cmp;
 pub use std::cmp::{max, min, Ordering, Reverse};
-pub use std::collections::{BTreeMap, BTreeSet, BinaryHeap, VecDeque};
+pub use std::collections::{BinaryHeap, BTreeMap, BTreeSet, VecDeque};
 pub use std::iter;
 pub use std::mem;
-use std::ops::Add;
 use std::str::FromStr;
 
 pub use ahash::{HashMap, HashMapExt as _, HashSet, HashSetExt as _};
 pub use either::Either;
 pub use itermore::{IterArrayChunks as _, IterArrayCombinations as _, IterArrayWindows as _};
 pub use itertools::{iproduct, Itertools as _};
+use pathfinding::num_traits::CheckedAdd;
 pub use regex_macro::regex;
+pub use vectrix::{Matrix, vector, Vector};
+
 pub use then::Some as _;
-pub use vectrix::{vector, Matrix, Vector};
 
 pub type Vector2 = vectrix::Vector<i64, 2>;
 pub type Vector3 = vectrix::Vector<i64, 3>;
@@ -55,9 +56,9 @@ pub fn lcm(x: i64, y: i64) -> i64 {
 
 /// Parses a 2D map into a data structure of type `M`.
 pub fn parse_map<M, F, V>(input: &str, parse: F) -> M
-where
-    M: FromIterator<(Vector2, V)>,
-    F: Fn(char) -> V,
+    where
+        M: FromIterator<(Vector2, V)>,
+        F: Fn(char) -> V,
 {
     input
         .lines()
@@ -83,8 +84,8 @@ pub fn parse_map_set(input: &str) -> HashSet<Vector2> {
 }
 
 pub fn get_numbers<N>(s: &str) -> Vec<N>
-where
-    N: FromStr + Add<Output = N> + PartialEq + PartialOrd + Copy + Default,
+    where
+        N: CheckedAdd + FromStr
 {
     let mut numbers: Vec<N> = Vec::new();
     let mut start_position = -1isize;
@@ -117,16 +118,19 @@ where
     numbers
 }
 
-pub struct NumberIterator<'a, N> {
+pub struct NumberIterator<'a, N>
+    where
+        N: CheckedAdd + FromStr
+{
     s: &'a [u8],
     start_position: isize,
     position: isize,
     phantom: std::marker::PhantomData<N>,
 }
 
-impl <'a, N> NumberIterator<'a, N>
-where
-    N: FromStr + Add<Output = N> + PartialEq + PartialOrd + Copy + Default,
+impl<'a, N> NumberIterator<'a, N>
+    where
+        N: CheckedAdd + FromStr
 {
     pub fn new(input: &'a str) -> Self {
         NumberIterator {
@@ -138,9 +142,9 @@ where
     }
 }
 
-impl <'a, N> Iterator for NumberIterator<'a, N>
-where
-    N: FromStr + Add<Output = N> + PartialEq + PartialOrd + Copy + Default,
+impl<'a, N> Iterator for NumberIterator<'a, N>
+    where
+        N: CheckedAdd + FromStr
 {
     type Item = N;
 
@@ -160,7 +164,7 @@ where
                         if let Ok(parsed) = sub_str.parse::<N>() {
                             self.start_position = -1;
                             self.position += 1;
-                            return Some(parsed)
+                            return Some(parsed);
                         } else {
                             self.start_position = -1;
                         }
@@ -186,13 +190,13 @@ pub trait ContainsNumbers
 {
     fn get_numbers<N>(&self) -> NumberIterator<'_, N>
         where
-            N: FromStr + Add<Output = N> + PartialEq + PartialOrd + Copy + Default,;
+            N: CheckedAdd + FromStr;
 }
 
-impl <'a> ContainsNumbers for &'a str {
+impl<'a> ContainsNumbers for &'a str {
     fn get_numbers<N>(&self) -> NumberIterator<'_, N>
-    where
-        N: FromStr + Add<Output = N> + PartialEq + PartialOrd + Copy + Default,
+        where
+            N: CheckedAdd + FromStr
     {
         NumberIterator::new(self)
     }
@@ -285,16 +289,16 @@ impl<T> Grid<T> for [T] {
     fn get_neighbors_diagonal(&self, position: usize, width: usize) -> Vec<usize> {
         let width = width as isize;
         let directions = vec![
-            -width - 1, -width, -width + 1, -1, 1, width - 1, width, width + 1
+            -width - 1, -width, -width + 1, -1, 1, width - 1, width, width + 1,
         ];
         self.get_neighbors_helper(position, directions)
     }
 }
 
 pub fn min_max_with<T, R, F>(items: &[T], selector: F) -> (&T, &T)
-where
-    R: PartialOrd + Clone,
-    F: Fn(&T) -> R
+    where
+        R: PartialOrd + Clone,
+        F: Fn(&T) -> R
 {
     let mut min = &items[0];
     let mut min_value = selector(min);
@@ -314,8 +318,8 @@ where
 }
 
 pub fn min_max<T>(items: &[T]) -> (&T, &T)
-where
-    T: PartialOrd,
+    where
+        T: PartialOrd,
 {
     let mut min = &items[0];
     let mut max = min;

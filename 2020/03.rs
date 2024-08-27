@@ -1,4 +1,5 @@
 use std::ops::Mul;
+
 use advent::prelude::*;
 
 fn parse_input(s: &str) -> (Vec<bool>, usize) {
@@ -24,7 +25,7 @@ fn default_input() -> (Vec<bool>, usize) {
 fn solve(map: &Vec<bool>, width: usize, right: usize, down: usize) -> usize {
     let height = map.len() / width;
     (down..height).step_by(down).enumerate().fold(0, |acc, (idx, y)| {
-        let x = ((idx + 1 ) * right) % width;
+        let x = ((idx + 1) * right) % width;
         if let Some(value) = map.get(y * width + x) {
             let modifier = if *value { 1 } else { 0 };
             acc + modifier

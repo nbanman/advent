@@ -18,7 +18,9 @@ fn parse_input(input: &str) -> HashMap<String, u32> {
                 let mut path_name = String::new();
                 path.iter().for_each(|folder| {
                     path_name.push_str(folder);
-                    let current_file_size = directories.entry(String::from(path_name.clone())).or_insert(0);
+                    let current_file_size: &mut u32 = directories
+                        .entry(String::from(path_name.clone()))
+                        .or_insert(0);
                     *current_file_size += file_size;
                 })
             }

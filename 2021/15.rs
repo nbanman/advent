@@ -20,6 +20,7 @@ struct State {
     weight: isize,
     h: isize,
 }
+
 impl State
 {
     fn f(&self) -> isize {
@@ -67,8 +68,8 @@ fn solve(cavern: Vec<u8>, width: usize) -> Option<usize> {
     let mut closed = vec![false; cavern.len()];
 
     while let Some(current) = open.pop() {
-        if closed[current.id as usize] == true { continue } else { closed[current.id as usize] = true }
-        if current.id == end_pos { return Some(current.weight as usize) }
+        if closed[current.id as usize] == true { continue; } else { closed[current.id as usize] = true }
+        if current.id == end_pos { return Some(current.weight as usize); }
 
         // get edges
         let edges = directions.iter()

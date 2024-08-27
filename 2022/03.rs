@@ -50,7 +50,7 @@ fn part2(rucksacks: Vec<Vec<u32>>) -> u32 {
         .map(|rucksack| bitset(rucksack))
         .array_chunked::<3>()
         .map(|tres| {
-            let x =tres.into_iter().reduce(|acc, bitset| { acc & bitset }).unwrap();
+            let x = tres.into_iter().reduce(|acc, bitset| { acc & bitset }).unwrap();
             count_trailing_zero_bits(x)
         }).sum()
 }

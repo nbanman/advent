@@ -1,7 +1,7 @@
-mod intcode;
-
 use advent::prelude::*;
-use intcode::{parse_program, Computer, State};
+use intcode::{Computer, parse_program, State};
+
+mod intcode;
 
 fn default_input() -> Vec<i64> {
     parse_program(include_input!(2019 / 23))
@@ -19,7 +19,7 @@ struct Network {
 }
 
 impl Computer {
-    fn feed_packets(&mut self, ps: impl IntoIterator<Item = Packet>) {
+    fn feed_packets(&mut self, ps: impl IntoIterator<Item=Packet>) {
         self.feed(ps.into_iter().flat_map(|Packet { x, y }| [x, y]));
     }
 
@@ -41,7 +41,7 @@ impl Computer {
         Some((addr, Packet { x, y }))
     }
 
-    fn poll_packets(&mut self) -> impl Iterator<Item = (i64, Packet)> + '_ {
+    fn poll_packets(&mut self) -> impl Iterator<Item=(i64, Packet)> + '_ {
         iter::from_fn(|| self.poll_packet())
     }
 }

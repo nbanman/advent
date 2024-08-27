@@ -39,7 +39,7 @@ fn solve(edges: &Graph<'_>, allow_one_extra: bool) -> usize {
                         new_visits.push(name);
                         let next_state = State {
                             visits: new_visits,
-                            visited_twice: state.visited_twice
+                            visited_twice: state.visited_twice,
                         };
                         q.push_back(next_state);
                     } else if allow_one_extra && !state.visited_twice {
@@ -47,7 +47,7 @@ fn solve(edges: &Graph<'_>, allow_one_extra: bool) -> usize {
                         new_visits.push(name);
                         let next_state = State {
                             visits: new_visits,
-                            visited_twice: true
+                            visited_twice: true,
                         };
                         q.push_back(next_state);
                     }

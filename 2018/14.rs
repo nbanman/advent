@@ -3,8 +3,8 @@ fn default_input() -> &'static str {
 }
 
 fn solve<F>(cond: F) -> Vec<u8>
-where
-    F: Fn(&[u8]) -> bool,
+    where
+        F: Fn(&[u8]) -> bool,
 {
     let mut scores = vec![3, 7];
     let mut i = 0;

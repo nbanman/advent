@@ -45,8 +45,8 @@ impl Op {
 
 // Evaluates the expression taking into account the operator precedance.
 fn eval<F>(tokens: Vec<Token>, prec: F) -> i64
-where
-    F: Fn(&Op, &Op) -> Ordering,
+    where
+        F: Fn(&Op, &Op) -> Ordering,
 {
     let mut values = Vec::new();
     for token in to_rpn(tokens, prec) {
@@ -72,8 +72,8 @@ where
 //
 // See https://en.wikipedia.org/wiki/Shunting-yard_algorithm
 fn to_rpn<F>(tokens: Vec<Token>, prec: F) -> Vec<Token>
-where
-    F: Fn(&Op, &Op) -> Ordering,
+    where
+        F: Fn(&Op, &Op) -> Ordering,
 {
     let mut output: Vec<Token> = Vec::new();
     let mut ops: Vec<Token> = Vec::new();

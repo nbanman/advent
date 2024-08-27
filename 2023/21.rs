@@ -29,10 +29,10 @@ fn parse_input(garden: &str) -> (usize, Vec<u8>) {
                     false
                 }
             }).collect();
-            neighbors.into_iter().for_each(|neighbor| {
-                visited[neighbor as usize] = true;
-                q.push_back((neighbor as usize, steps + 1));
-            });
+        neighbors.into_iter().for_each(|neighbor| {
+            visited[neighbor as usize] = true;
+            q.push_back((neighbor as usize, steps + 1));
+        });
     }
     (width, step_count)
 }

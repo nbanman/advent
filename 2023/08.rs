@@ -21,9 +21,9 @@ fn default_input() -> (&'static str, HashMap<String, (String, String)>) {
 fn traverse<F>(
     directions: &str,
     network: &HashMap<String, (String, String)>,
-    start_node: &str, 
+    start_node: &str,
     end_condition: F) -> usize
-where F: Fn(&str) -> bool
+    where F: Fn(&str) -> bool
 {
     directions
         .chars()
@@ -47,6 +47,7 @@ where F: Fn(&str) -> bool
         .unwrap()
         .0 + 1
 }
+
 // fn part1(dir: &str, network: &HashMap<String, (String, String)>) -> usize {
 fn part1(
     (directions, network): (&str, HashMap<String, (String, String)>)
@@ -64,8 +65,8 @@ fn part2(
         .map(|node| traverse(directions, &network, node, end_condition))
         .reduce(|acc, cycle_length| lcm(acc as i64, cycle_length as i64) as usize)
         .unwrap()
-
 }
+
 fn main() {
     let solution = advent::new(default_input).part(part1).part(part2).build();
     solution.cli()

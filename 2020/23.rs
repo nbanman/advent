@@ -62,7 +62,7 @@ fn play(cups: &[usize], moves: usize, n: Option<usize>) -> Vec<usize> {
     circle
 }
 
-fn iter(circle: &[usize]) -> impl Iterator<Item = usize> + '_ {
+fn iter(circle: &[usize]) -> impl Iterator<Item=usize> + '_ {
     iter::successors(Some(1), |&c| Some(circle[c]))
 }
 

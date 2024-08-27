@@ -1,4 +1,5 @@
 use std::ops::{Add, Mul};
+
 use advent::prelude::*;
 
 fn default_input() -> &'static str { include_input!(2017 / 10).trim_end() }

@@ -16,8 +16,8 @@ fn default_input() -> Vec<Vec<HashSet<char>>> {
 }
 
 fn solve<F>(groups: Vec<Vec<HashSet<char>>>, f: F) -> usize
-where
-    F: Fn(HashSet<char>, HashSet<char>) -> HashSet<char>,
+    where
+        F: Fn(HashSet<char>, HashSet<char>) -> HashSet<char>,
 {
     groups
         .into_iter()

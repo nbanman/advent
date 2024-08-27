@@ -3,7 +3,7 @@ use advent::prelude::*;
 struct SpringRow {
     conditions: String,
     damage_report: Vec<usize>,
-    cache: HashMap<State, usize>
+    cache: HashMap<State, usize>,
 }
 
 impl SpringRow {
@@ -11,7 +11,6 @@ impl SpringRow {
         if let Some(value) = self.cache.get(&s) {
             *value
         } else {
-
             // do not consider conditions already handled in previous states
             // if state place exceeds the conditions length string, we are done and the block is blank
             let block = if s.conditions_index < self.conditions.len() {
@@ -33,14 +32,14 @@ impl SpringRow {
                     1
                 };
                 self.cache.insert(s, value);
-                return value
+                return value;
             }
 
             // Otherwise, we go recursive by trying to fit the fulfillment in every place along the block
             // This starts as a sequence of indexes, from 0 until the length of the block minus the fulfillment size
             // (to account for the size of the fulfillment itself in the string).
             let value = if block.len() >= fulfillment {
-                (0 ..=block.len() - fulfillment)
+                (0..=block.len() - fulfillment)
                     .take_while(|index| { *index == 0 || block.as_bytes()[index - 1] as char != '#' })
                     .filter(|index| {
                         // filter out invalid placements, in cascading fashion
@@ -61,13 +60,11 @@ impl SpringRow {
                     .map(|index| {
                         let new_state = State {
                             conditions_index: s.conditions_index + index + fulfillment + 1,
-                            damage_index: s.damage_index + 1
+                            damage_index: s.damage_index + 1,
                         };
                         self.arrangements(new_state)
                     })
                     .sum()
-
-
             } else {
                 0
             };
@@ -82,12 +79,13 @@ struct State {
     conditions_index: usize,
     damage_index: usize,
 }
+
 fn parse_input(input: &'static str) -> Vec<(String, Vec<usize>)> {
     input.lines()
         .map(|line| {
             let (conditions, damage_str) = line.split_once(' ').unwrap();
             let damage_report: Vec<usize> = damage_str.split(',')
-                .map(|s| s.parse::<usize>().unwrap() )
+                .map(|s| s.parse::<usize>().unwrap())
                 .collect();
             (conditions.to_string(), damage_report)
         })
@@ -162,6 +160,7 @@ fn example1() {
     assert_eq!(part1(parse_input(input)), 21);
     assert_eq!(part2(parse_input(input)), 525152);
 }
+
 #[test]
 fn default() {
     let input = default_input();

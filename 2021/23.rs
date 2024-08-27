@@ -78,7 +78,7 @@ const fn target_rooms<const R: usize>() -> [[Option<Amphipod>; R]; 4] {
 }
 
 // Returns an iterator over all the combinations of moving amphipods *out*.
-fn move_out<const R: usize>(map: &Map<R>) -> impl Iterator<Item = (Map<R>, usize)> + '_ {
+fn move_out<const R: usize>(map: &Map<R>) -> impl Iterator<Item=(Map<R>, usize)> + '_ {
     map.rooms
         .iter()
         .enumerate()
@@ -121,7 +121,7 @@ fn move_out<const R: usize>(map: &Map<R>) -> impl Iterator<Item = (Map<R>, usize
 }
 
 // Returns an iterator over all the combinations of moving amphipods *in*.
-fn move_in<const R: usize>(map: &Map<R>) -> impl Iterator<Item = (Map<R>, usize)> + '_ {
+fn move_in<const R: usize>(map: &Map<R>) -> impl Iterator<Item=(Map<R>, usize)> + '_ {
     map.hallway
         .iter()
         .enumerate()

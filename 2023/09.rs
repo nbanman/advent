@@ -21,6 +21,7 @@ fn extrapolate(pattern: &Vec<i64>) -> i64 {
     let answer = s;
     answer
 }
+
 fn part1(patterns: Vec<Vec<i64>>) -> i64 {
     patterns.iter().map(|pattern| extrapolate(pattern)).sum()
 }

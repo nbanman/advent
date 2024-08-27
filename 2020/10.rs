@@ -1,4 +1,5 @@
 use std::ops::Mul;
+
 use advent::prelude::*;
 
 fn parse_input(input: &str) -> Vec<usize> {

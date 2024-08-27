@@ -1,7 +1,7 @@
-mod intcode;
-
 use advent::prelude::*;
-use intcode::{parse_program, Computer};
+use intcode::{Computer, parse_program};
+
+mod intcode;
 
 fn default_input() -> Vec<i64> {
     parse_program(include_input!(2019 / 17))
@@ -80,8 +80,8 @@ fn navigate(image: &HashMap<Vector2, char>) -> Vec<Move> {
                 Move::Left(n) | Move::Right(n) => *n += 1,
             }
             Some((next, d))
-        // Otherwise we need to find the best way to go, which must be a
-        // scaffold and not our previous position.
+            // Otherwise we need to find the best way to go, which must be a
+            // scaffold and not our previous position.
         } else {
             let prev = droid - d;
             for to in CARDINALS {
@@ -126,10 +126,10 @@ fn is_valid_routine(moves: &[Move], routine: &[(&[Move], Vec<usize>)]) -> bool {
         .array_windows()
         .all(|[a, b]| a.is_disjoint(b))
         && indexes
-            .into_iter()
-            .flatten()
-            .collect::<HashSet<_>>()
-            .is_superset(&all)
+        .into_iter()
+        .flatten()
+        .collect::<HashSet<_>>()
+        .is_superset(&all)
 }
 
 /// Returns a function routine from a list of moves.

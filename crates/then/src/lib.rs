@@ -58,8 +58,8 @@ pub trait Some {
     /// assert_eq!(true.some_with(Default::default), Some(0));
     /// ```
     fn some_with<T, F>(self, f: F) -> Option<T>
-    where
-        F: FnOnce() -> T;
+        where
+            F: FnOnce() -> T;
 }
 
 impl Some for bool {
@@ -74,8 +74,8 @@ impl Some for bool {
 
     #[inline]
     fn some_with<T, F>(self, f: F) -> Option<T>
-    where
-        F: FnOnce() -> T,
+        where
+            F: FnOnce() -> T,
     {
         if self {
             Some(f())

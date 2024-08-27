@@ -7,7 +7,7 @@ fn default_input() -> &'static str {
 struct Maps {
     counterparts: HashMap<u8, u8>,
     syntax_error_score: HashMap<u8, usize>,
-    point_value: HashMap<u8, u8>
+    point_value: HashMap<u8, u8>,
 }
 
 impl Maps {
@@ -38,14 +38,14 @@ impl Maps {
 }
 
 fn parse_string<F, G>(s: &str, maps: &Maps, on_corrupt: F, on_finish: G) -> Option<usize>
-where
-    F: Fn(u8) -> Option<usize>,
-    G: Fn(Vec<u8>) -> Option<usize>,
+    where
+        F: Fn(u8) -> Option<usize>,
+        G: Fn(Vec<u8>) -> Option<usize>,
 {
     let mut stack = Vec::new();
     for &candidate in s.as_bytes().iter() {
         if maps.counterparts.values().contains(&candidate) {
-            if candidate != stack.pop().unwrap() { return on_corrupt(candidate) }
+            if candidate != stack.pop().unwrap() { return on_corrupt(candidate); }
         } else {
             stack.push(*maps.counterparts.get(&candidate).unwrap())
         }
@@ -77,7 +77,7 @@ fn part2(input: &str) -> usize {
                 line,
                 &maps,
                 |_| None,
-                |it| Some(maps.score(&it))
+                |it| Some(maps.score(&it)),
             )
         })
         .sorted()

@@ -58,7 +58,7 @@ fn top(stacks: &[VecDeque<u8>]) -> String {
 }
 
 fn part1((mut stacks, instructions): (Vec<VecDeque<u8>>, Vec<Move>)) -> String {
-    for Move { quantity, from, to} in instructions {
+    for Move { quantity, from, to } in instructions {
         for _ in 0..quantity {
             if let Some(crater) = stacks[from].pop_front() {
                 stacks[to].push_front(crater)
@@ -70,7 +70,7 @@ fn part1((mut stacks, instructions): (Vec<VecDeque<u8>>, Vec<Move>)) -> String {
 
 fn part2((mut stacks, instructions): (Vec<VecDeque<u8>>, Vec<Move>)) -> String {
     let mut temp = VecDeque::new();
-    for Move { quantity, from, to} in instructions {
+    for Move { quantity, from, to } in instructions {
         for _ in 0..quantity {
             if let Some(crater) = stacks[from].pop_front() {
                 temp.push_front(crater)
