@@ -53,7 +53,7 @@ impl Spell {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
 struct State {
     mana_spent: isize,
     player_hp: isize,
@@ -99,7 +99,6 @@ fn player_turn(state: &State, spell: Spell, constant_drain: isize) -> State {
 }
 
 fn boss_turn(state: &State, damage: isize) -> State {
-    if state.player_hp <= 0 { return (*state).clone(); }
     let armor = if state.shield > 0 { Shield.effect() } else { 0 };
     let new_player_hp = state.player_hp - (damage - armor).max(1);
     let new_boss_hp = state.boss_hp - if state.poison > 0 { Poison.effect() } else { 0 };
@@ -151,7 +150,11 @@ fn solve(boss_hp: isize, damage: isize, constant_drain: isize) -> isize {
             })
             .map(|spell| {
                 let player_turn = player_turn(&current, *spell, constant_drain);
-                boss_turn(&player_turn, damage)
+                if player_turn.player_hp <= 0 {
+                    player_turn
+                } else {
+                    boss_turn(&player_turn, damage)
+                }
             })
             .filter(|turn| {
                 if turn.boss_hp <= 0 {
