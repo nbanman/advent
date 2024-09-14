@@ -26,6 +26,7 @@ thiserror = "1.0.50"
 toml = "0.8.8"
 vectrix = "0.3.0"
 yansi = "1.0.0-rc.1"
+md5 = "0.7.0"
 
 [package]
 name = "advent-bins"
@@ -39,12 +40,72 @@ vectrix = { workspace = true }
 advent = { path = "crates/advent", features = ["festive", "prelude"] }
 itertools = "0.12.0"
 regex = "1.5.6"
+md5 = "0.7.0"
+fancy-regex = "0.13.0"
+once_cell = "1.19.0"
+indexmap = "2.5.0"
 
 [features]
 json = ["advent/json"]
 
 [lints]
 workspace = true
+
+[[bin]]
+name = "201501"
+path = "2015/01.rs"
+
+[[bin]]
+name = "201502"
+path = "2015/02.rs"
+
+[[bin]]
+name = "201503"
+path = "2015/03.rs"
+
+[[bin]]
+name = "201504"
+path = "2015/04.rs"
+
+[[bin]]
+name = "201505"
+path = "2015/05.rs"
+
+[[bin]]
+name = "201506"
+path = "2015/06.rs"
+
+[[bin]]
+name = "201507"
+path = "2015/07.rs"
+
+[[bin]]
+name = "201508"
+path = "2015/08.rs"
+
+[[bin]]
+name = "201509"
+path = "2015/09.rs"
+
+[[bin]]
+name = "201510"
+path = "2015/10.rs"
+
+[[bin]]
+name = "201511"
+path = "2015/11.rs"
+
+[[bin]]
+name = "201512"
+path = "2015/12.rs"
+
+[[bin]]
+name = "201513"
+path = "2015/13.rs"
+
+[[bin]]
+name = "201514"
+path = "2015/14.rs"
 
 [[bin]]
 name = "201701"
