@@ -122,6 +122,8 @@ fn default_input() -> (isize, isize) {
     parse_input(include_input!(2015 / 22))
 }
 
+// Dijkstra implementation, maintaining game state and trying all available spells, trying minimum
+// mana states first.
 fn solve(boss_hp: isize, damage: isize, constant_drain: isize) -> isize {
     let mut states = BinaryHeap::new();
     states.push(Reverse(State {
@@ -135,11 +137,14 @@ fn solve(boss_hp: isize, damage: isize, constant_drain: isize) -> isize {
     }));
     let mut lowest_mana_win = isize::MAX;
     while let Some(Reverse(current)) = states.pop() {
+
+        // try every castable spell and calculate the state
         let next_states = Spell::entries().iter()
             .filter(|spell| {
                 if current.available_mana() < spell.mana_cost() {
-                    false
+                    false // not enough mana to cast so invalid!
                 } else {
+                    // You can only cast if the effect is expired/expiring
                     match spell {
                         Shield => current.shield <= 1,
                         Poison => current.poison <= 1,
@@ -149,7 +154,10 @@ fn solve(boss_hp: isize, damage: isize, constant_drain: isize) -> isize {
                 }
             })
             .map(|spell| {
+                // simulate turn
                 let player_turn = player_turn(&current, *spell, constant_drain);
+
+                // only simulate boss turn if player is still alive
                 if player_turn.player_hp <= 0 {
                     player_turn
                 } else {
@@ -157,14 +165,21 @@ fn solve(boss_hp: isize, damage: isize, constant_drain: isize) -> isize {
                 }
             })
             .filter(|turn| {
+                // boss is dead, so check to see if the mana is less than current lowest. don't propagate state
                 if turn.boss_hp <= 0 {
                     lowest_mana_win = min(lowest_mana_win, turn.mana_spent);
                     false
                 } else if turn.player_hp <= 0 ||
                     turn.available_mana() < 53 ||
                     turn.mana_spent > lowest_mana_win {
+                    // either player is dead, player can't cast a spell the next round, or the total
+                    // mana spent is higher than the current lowest mana win. In all cases, player
+                    // meets with failure so do not propagate
                     false
-                } else { true }
+                } else {
+                    // otherwise, not finished so add state to PQ
+                    true
+                }
             });
         for next_state in next_states {
             states.push(Reverse(next_state))
