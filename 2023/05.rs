@@ -23,7 +23,7 @@ fn parse_input(input: &str) -> (Vec<i64>, Vec<Vec<Listing>>) {
         .map(get_numbers)
         .collect();
 
-    let seeds = &stanzas[0];
+    let seeds = stanzas[0].to_owned();
     let conversions = stanzas[1..].iter()
         .map(|map_numbers| {
             map_numbers
@@ -40,7 +40,7 @@ fn parse_input(input: &str) -> (Vec<i64>, Vec<Vec<Listing>>) {
                 .collect::<Vec<_>>()
         })
         .collect::<Vec<_>>();
-    (seeds.to_owned(), conversions)
+    (seeds, conversions)
 }
 
 fn solve(conversions: &[Vec<Listing>], seed_ranges: Vec<(i64, i64)>) -> i64 {
