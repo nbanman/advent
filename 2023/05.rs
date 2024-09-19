@@ -18,15 +18,10 @@ fn default_input() -> (Vec<i64>, Vec<Vec<Listing>>) {
 }
 
 fn parse_input(input: &str) -> (Vec<i64>, Vec<Vec<Listing>>) {
-    let stanzas: Vec<Vec<i64>> = input.split("\n\n")
-        .map(|stanza| {
-            let number_strings: String = stanza.chars()
-                .filter(|c| c.is_ascii_digit() || c.is_whitespace())
-                .collect();
-            number_strings.split_whitespace()
-                .map(|number_string| number_string.parse::<i64>().unwrap())
-                .collect()
-        }).collect();
+    let stanzas: Vec<Vec<i64>> = input
+        .split("\n\n")
+        .map(get_numbers)
+        .collect();
 
     let seeds = &stanzas[0];
     let conversions = stanzas[1..].iter()
