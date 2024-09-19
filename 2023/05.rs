@@ -26,18 +26,14 @@ fn parse_input(input: &str) -> (Vec<i64>, Vec<Vec<Listing>>) {
     let seeds = &stanzas[0];
     let conversions = stanzas[1..].iter()
         .map(|map_numbers| {
-            map_numbers.chunks(3)
-                .filter_map(|chunk| {
-                    if let [destination_start, source_start, length] = chunk {
-                        Some(
-                            Listing {
-                                source_start: *source_start,
-                                offset: destination_start - source_start,
-                                len: *length,
-                            }
-                        )
-                    } else {
-                        None
+            map_numbers
+                .iter()
+                .tuples()
+                .map(|(destination_start, source_start, length)| {
+                    Listing {
+                        source_start: *source_start,
+                        offset: destination_start - source_start,
+                        len: *length,
                     }
                 })
                 .sorted_by_key(|listing| listing.source_start)
