@@ -15,7 +15,7 @@ enum Nsew {
 
 impl Nsew {
     fn left(&self) -> Nsew {
-        if let Some(dir) = Nsew::from_usize((((*self) as isize - 1).rem_euclid(4)) as usize) {
+        if let Some(dir) = Nsew::from_usize(((*self) as isize - 1).rem_euclid(4) as usize) {
             dir
         } else {
             self.clone()
@@ -23,7 +23,7 @@ impl Nsew {
     }
 
     fn right(&self) -> Nsew {
-        if let Some(dir) = Nsew::from_usize((((*self) as usize + 1).rem_euclid(4))) {
+        if let Some(dir) = Nsew::from_usize(((*self) as usize + 1).rem_euclid(4)) {
             dir
         } else {
             self.clone()
@@ -51,44 +51,34 @@ impl Manhattan for Vector2 {
     }
 }
 
-fn part1(input: &'static str) -> usize {
+fn moves(input: &str) -> impl Iterator<Item = Vector2> + '_ {
     let mut dir = Nsew::North;
-    let mut pos = Vector2::zero();
-    for instruction in input.split(", ") {
-        let times = instruction.get_numbers().next().unwrap();
-        dir = if instruction.chars().next() == Some('L') { dir.left() } else { dir.right() };
-        for i in 0..times {
-            pos += match dir {
+    input
+        .split(", ")
+        .flat_map(move |instruction| {
+            let times = instruction.get_numbers().next().unwrap();
+            dir = if instruction.chars().next() == Some('L') { dir.left() } else { dir.right() };
+            (0..times).map(move |_| dir)
+        })
+        .scan(Vector2::zero(), |state, dir| {
+            *state = *state + match dir {
                 Nsew::North => vector!(0, -1),
                 Nsew::East => vector!(1, 0),
                 Nsew::South => vector!(0, 1),
                 Nsew::West => vector!(-1, 0),
             };
-        }
-    }
-    pos.manhattan_distance(Vector2::zero())
+            Some(*state)
+        })
+}
+fn part1(input: &'static str) -> usize {
+    let moves = moves(input);
+    moves.last().unwrap().manhattan_distance(Vector2::zero())
 }
 
 fn part2(input: &'static str) -> usize {
+    let mut moves = moves(input);
     let mut visited = HashSet::new();
-    let mut dir = Nsew::North;
-    let mut pos = Vector2::zero();
-    for instruction in input.split(", ") {
-        let times = instruction.get_numbers().next().unwrap();
-        dir = if instruction.chars().next() == Some('L') { dir.left() } else { dir.right() };
-        for i in 0..times {
-            pos += match dir {
-                Nsew::North => vector!(0, -1),
-                Nsew::East => vector!(1, 0),
-                Nsew::South => vector!(0, 1),
-                Nsew::West => vector!(-1, 0),
-            };
-            if !visited.insert(pos) {
-                return pos.manhattan_distance(Vector2::zero())
-            }
-        }
-    }
-    unreachable!()
+    moves.find(|pos| !visited.insert(*pos)).unwrap().manhattan_distance(Vector2::zero())
 }
 
 fn main() {
