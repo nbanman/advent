@@ -35,7 +35,6 @@ fn default_input() -> Vec<Hand> {
 }
 
 impl Hand {
-
     // returns an array used for comparing hand strength. Each element in the array is compared, and
     // if tied, the next element is compared.
     fn hand_strength(&self, jacks_are_jokers: bool) -> [u8; 7] {
