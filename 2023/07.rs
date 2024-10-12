@@ -59,18 +59,23 @@ impl Hand {
                     groups[card as usize] += 1;
                 }
             }
-            let groups: Vec<usize> = groups
+            let (first, second) = groups
                 .into_iter()
                 .sorted_by(|a, b| b.cmp(a))
-                .collect();
+                .take(2)
+                .collect_tuple()
+                .unwrap();
 
             // this gives a strength, from weakest to strongest, of 3, 5, 6, 7, 8, 9, 10
-            // we use getOrElse for the second group because some combinations have no second group
-            (*groups.first().unwrap() + jokers) * 2 + *(groups.get(1).unwrap_or(&0))
+            (first + jokers) * 2 + second
         };
+
+        // utility function so that if jacks are jokers, the value of the joker is 0 instead of 11
         let value = |c: u8| -> usize {
             if jacks_are_jokers && c == 11 { 0 } else { c as usize }
         };
+
+        // include the strength of cards in the final strength calculation
         self.cards.iter().fold(hand_type_strength, |acc, &card| {
             (acc << 4) + value(card)
         })
