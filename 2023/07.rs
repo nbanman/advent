@@ -2,7 +2,7 @@ use advent::prelude::*;
 
 #[derive(Clone)]
 struct Hand {
-    cards: Vec<u8>,
+    cards: Vec<u8>, // convert chars into u8s ordered by card strength
     bid: usize,
 }
 fn parse_input(input: &str) -> Vec<Hand> {
@@ -22,10 +22,8 @@ fn parse_input(input: &str) -> Vec<Hand> {
                     }
                 })
                 .collect();
-            Hand {
-                cards,
-                bid: bid.parse::<usize>().unwrap(),
-            }
+            let bid = bid.parse().unwrap();
+            Hand { cards, bid }
         })
         .collect()
 }
@@ -35,19 +33,33 @@ fn default_input() -> Vec<Hand> {
 }
 
 impl Hand {
+    // strength is an Int that we use to sort with. The most important component of strength  is the strength
+    // of the type of hand. After that, the value of the cards, in order. E.g., 98 > 8A, because 9 is greater
+    // than 8. We can represent this all as an Int concatenating them all, giving 4 bits for each value.
     fn hand_strength(&self, jacks_are_jokers: bool) -> usize {
-        let jokers = self.cards.iter()
-            .filter(|&&c| jacks_are_jokers && c == 12)
-            .count();
+        // number of jokers gets added to the most numerous of the other cards to make the most powerful hand
+        let jokers = if jacks_are_jokers {
+            self.cards.iter()
+                .filter(|&&c| c == 12)
+                .count()
+        } else {
+            0
+        };
         let hand_type_strength = if jokers == 5 {
             10
         } else {
+            // groups cards together, for use in determining handTypeStrength. Sorted because the relative size
+            // of the groups is used to determine what kind of hand we have. Then take the two most populous groups
+            // in the hand, then deliver ordered ranking of each hand type.
             let groups: Vec<usize> = self.cards.iter()
                 .filter(|&&c| !jacks_are_jokers || c != 12)
                 .counts()
                 .into_values()
                 .sorted_by(|a, b| b.cmp(a))
                 .collect();
+
+            // this gives a strength, from weakest to strongest, of 3, 5, 6, 7, 8, 9, 10
+            // we use getOrElse for the second group because some combinations have no second group
             (*groups.first().unwrap() + jokers) * 2 + *(groups.get(1).unwrap_or(&0))
         };
         let value = |c: u8| -> usize {
@@ -59,6 +71,8 @@ impl Hand {
     }
 }
 
+// takes the hands, sorts by the hand strength as defined by each puzzle part, assigns points using rank and
+// bid amount, then returns sum of all points
 fn solve(input: Vec<Hand>, jacks_are_jokers: bool) -> usize {
     input
         .iter()
