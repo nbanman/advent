@@ -12,12 +12,12 @@ impl Hand {
         let cards = cards.as_bytes().iter()
             .map(|&c| {
                 match c {
-                    b'T' => 11,
-                    b'J' => 12,
-                    b'Q' => 13,
-                    b'K' => 14,
-                    b'A' => 15,
-                    num => num - 48,
+                    b'T' => 10,
+                    b'J' => 11,
+                    b'Q' => 12,
+                    b'K' => 13,
+                    b'A' => 14,
+                    num => num - 49,
                 }
             })
             .collect();
@@ -42,7 +42,7 @@ impl Hand {
         // number of jokers gets added to the most numerous of the other cards to make the most powerful hand
         let jokers = if jacks_are_jokers {
             self.cards.iter()
-                .filter(|&&c| c == 12)
+                .filter(|&&c| c == 11)
                 .count()
         } else {
             0
@@ -53,10 +53,14 @@ impl Hand {
             // groups cards together, for use in determining handTypeStrength. Sorted because the relative size
             // of the groups is used to determine what kind of hand we have. Then take the two most populous groups
             // in the hand, then deliver ordered ranking of each hand type.
-            let groups: Vec<usize> = self.cards.iter()
-                .filter(|&&c| !jacks_are_jokers || c != 12)
-                .counts()
-                .into_values()
+            let mut groups = [0usize; 15];
+            for &card in self.cards.iter() {
+                if !jacks_are_jokers || card != 11 {
+                    groups[card as usize] += 1;
+                }
+            }
+            let groups: Vec<usize> = groups
+                .into_iter()
                 .sorted_by(|a, b| b.cmp(a))
                 .collect();
 
@@ -65,7 +69,7 @@ impl Hand {
             (*groups.first().unwrap() + jokers) * 2 + *(groups.get(1).unwrap_or(&0))
         };
         let value = |c: u8| -> usize {
-            if jacks_are_jokers && c == 12 { 0 } else { c as usize }
+            if jacks_are_jokers && c == 11 { 0 } else { c as usize }
         };
         self.cards.iter().fold(hand_type_strength, |acc, &card| {
             (acc << 4) + value(card)
