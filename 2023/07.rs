@@ -44,17 +44,13 @@ fn solve<F>(input: &str, swap_jokers: F) -> usize
         let (cards, bid) = line.split_once(' ')?;
         let cards = swap_jokers(cards);
         let hand = Hand {
-            cards: cards.to_string(),
+            cards,
             bid: bid.parse::<usize>().ok()?,
         };
         Some(hand)
     }).sorted_by_cached_key(|hand| hand.hand_strength())
         .enumerate()
-        .map(|(index, hand)| {
-            // println!("cards: {}, bid: {}, strength: {}, rank: {}", hand.cards, hand.bid, hand.hand_strength(), index + 1);
-            // println!("{}", hand.cards);
-            (index + 1) * hand.bid
-        })
+        .map(|(index, hand)| (index + 1) * hand.bid)
         .sum()
 }
 
