@@ -5,27 +5,29 @@ struct Hand {
     cards: Vec<u8>, // convert chars into u8s ordered by card strength
     bid: usize,
 }
+
+impl Hand {
+    fn new(s: &str) -> Self {
+        let (cards, bid) = s.split_once(' ').unwrap();
+        let cards = cards.as_bytes().iter()
+            .map(|&c| {
+                match c {
+                    b'T' => 11,
+                    b'J' => 12,
+                    b'Q' => 13,
+                    b'K' => 14,
+                    b'A' => 15,
+                    num => num - 48,
+                }
+            })
+            .collect();
+        let bid = bid.parse().unwrap();
+        Self { cards, bid }
+    }
+}
+
 fn parse_input(input: &str) -> Vec<Hand> {
-    input
-        .lines()
-        .map(|line| {
-            let (cards, bid) = line.split_once(' ').unwrap();
-            let cards = cards.as_bytes().iter()
-                .map(|&c| {
-                    match c {
-                        b'T' => 11,
-                        b'J' => 12,
-                        b'Q' => 13,
-                        b'K' => 14,
-                        b'A' => 15,
-                        num => num - 48,
-                    }
-                })
-                .collect();
-            let bid = bid.parse().unwrap();
-            Hand { cards, bid }
-        })
-        .collect()
+    input.lines().map(Hand::new).collect()
 }
 
 fn default_input() -> Vec<Hand> {
@@ -77,11 +79,10 @@ fn solve(input: Vec<Hand>, jacks_are_jokers: bool) -> usize {
     input
         .iter()
         .sorted_by_cached_key(|hand| hand.hand_strength(jacks_are_jokers))
-            .enumerate()
-            .map(|(index, hand)| (index + 1) * hand.bid)
-            .sum()
+        .enumerate()
+        .map(|(index, hand)| (index + 1) * hand.bid)
+        .sum()
 }
-
 
 fn part1(input: Vec<Hand>) -> usize {
     solve(input, false)
