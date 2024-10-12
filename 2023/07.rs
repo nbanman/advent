@@ -56,8 +56,7 @@ impl Hand {
         }
 
         // get the frequency of the two most frequently occurring cards
-        let (first, second) = groups
-            .into_iter()
+        let (first, second) = groups.into_iter()
             .sorted_by(|a, b| b.cmp(a))
             .take(2)
             .collect_tuple()
@@ -78,22 +77,16 @@ impl Hand {
 
 // takes the hands, sorts by the hand strength as defined by each puzzle part, assigns points using rank and
 // bid amount, then returns sum of all points
-fn solve(input: Vec<Hand>, jacks_are_jokers: bool) -> usize {
-    input
-        .iter()
+fn solve(hands: Vec<Hand>, jacks_are_jokers: bool) -> usize {
+    hands.iter()
         .sorted_by_cached_key(|hand| hand.hand_strength(jacks_are_jokers))
         .enumerate()
         .map(|(index, hand)| (index + 1) * hand.bid)
         .sum()
 }
 
-fn part1(input: Vec<Hand>) -> usize {
-    solve(input, false)
-}
-
-fn part2(input: Vec<Hand>) -> usize {
-    solve(input, true)
-}
+fn part1(hands: Vec<Hand>) -> usize { solve(hands, false) }
+fn part2(hands: Vec<Hand>) -> usize { solve(hands, true) }
 
 fn main() {
     let solution = advent::new(default_input).part(part1).part(part2).build();
