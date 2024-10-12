@@ -17,7 +17,7 @@ impl Hand {
                     b'Q' => 12,
                     b'K' => 13,
                     b'A' => 14,
-                    num => num - 49,
+                    num => num - 48,
                 }
             })
             .collect();
