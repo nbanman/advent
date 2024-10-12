@@ -35,50 +35,45 @@ fn default_input() -> Vec<Hand> {
 }
 
 impl Hand {
-    // strength is an Int that we use to sort with. The most important component of strength  is the strength
-    // of the type of hand. After that, the value of the cards, in order. E.g., 98 > 8A, because 9 is greater
-    // than 8. We can represent this all as an Int concatenating them all, giving 4 bits for each value.
-    fn hand_strength(&self, jacks_are_jokers: bool) -> usize {
+
+    // returns an array used for comparing hand strength. Each element in the array is compared, and
+    // if tied, the next element is compared.
+    fn hand_strength(&self, jacks_are_jokers: bool) -> [u8; 7] {
         // number of jokers gets added to the most numerous of the other cards to make the most powerful hand
         let jokers = if jacks_are_jokers {
             self.cards.iter()
                 .filter(|&&c| c == 11)
-                .count()
+                .count() as u8
         } else {
             0
         };
-        let hand_type_strength = if jokers == 5 {
-            10
-        } else {
-            // groups cards together, for use in determining handTypeStrength. Sorted because the relative size
-            // of the groups is used to determine what kind of hand we have. Then take the two most populous groups
-            // in the hand, then deliver ordered ranking of each hand type.
-            let mut groups = [0usize; 15];
-            for &card in self.cards.iter() {
-                if !jacks_are_jokers || card != 11 {
-                    groups[card as usize] += 1;
-                }
+
+        // groups cards together, for use in determining the two most frequently occurring cards.
+        let mut groups = [0u8; 15];
+        for &card in self.cards.iter() {
+            if !jacks_are_jokers || card != 11 {
+                groups[card as usize] += 1;
             }
-            let (first, second) = groups
-                .into_iter()
-                .sorted_by(|a, b| b.cmp(a))
-                .take(2)
-                .collect_tuple()
-                .unwrap();
+        }
 
-            // this gives a strength, from weakest to strongest, of 3, 5, 6, 7, 8, 9, 10
-            (first + jokers) * 2 + second
-        };
+        // get the frequency of the two most frequently occurring cards
+        let (first, second) = groups
+            .into_iter()
+            .sorted_by(|a, b| b.cmp(a))
+            .take(2)
+            .collect_tuple()
+            .unwrap();
 
-        // utility function so that if jacks are jokers, the value of the joker is 0 instead of 11
-        let value = |c: u8| -> usize {
-            if jacks_are_jokers && c == 11 { 0 } else { c as usize }
-        };
+        let mut strength = [0u8; 7];
 
-        // include the strength of cards in the final strength calculation
-        self.cards.iter().fold(hand_type_strength, |acc, &card| {
-            (acc << 4) + value(card)
-        })
+        strength[0] = first + jokers; // # of most frequently occurring card, plus any jokers
+        strength[1] = second; // # of second most frequently occurring card
+
+        // remainder of array is filled with the strength of each individual card in the hand
+        for (index, &card) in self.cards.iter().enumerate() {
+            strength[index + 2] = if jacks_are_jokers && card == 11 { 0 } else { card }
+        }
+        strength
     }
 }
 
