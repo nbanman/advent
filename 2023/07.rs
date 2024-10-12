@@ -1,70 +1,80 @@
 use advent::prelude::*;
 
-fn parse_input(input: &str) -> &str {
+#[derive(Clone)]
+struct Hand {
+    cards: Vec<u8>,
+    bid: usize,
+}
+fn parse_input(input: &str) -> Vec<Hand> {
     input
+        .lines()
+        .map(|line| {
+            let (cards, bid) = line.split_once(' ').unwrap();
+            let cards = cards.as_bytes().iter()
+                .map(|&c| {
+                    match c {
+                        b'T' => 11,
+                        b'J' => 12,
+                        b'Q' => 13,
+                        b'K' => 14,
+                        b'A' => 15,
+                        num => num - 48,
+                    }
+                })
+                .collect();
+            Hand {
+                cards,
+                bid: bid.parse::<usize>().unwrap(),
+            }
+        })
+        .collect()
 }
 
-fn default_input() -> &'static str {
+fn default_input() -> Vec<Hand> {
     parse_input(include_input!(2023 / 07))
 }
 
-struct Hand {
-    cards: String,
-    bid: usize,
-}
-
 impl Hand {
-    fn hand_strength(&self) -> usize {
-        let jokers = self.cards.chars()
-            .filter(|c| *c == 'ĵ')
+    fn hand_strength(&self, jacks_are_jokers: bool) -> usize {
+        let jokers = self.cards.iter()
+            .filter(|&&c| jacks_are_jokers && c == 12)
             .count();
         let hand_type_strength = if jokers == 5 {
             10
         } else {
-            let groups: Vec<usize> = self.cards.chars()
-                .filter(|c| *c != 'ĵ')
+            let groups: Vec<usize> = self.cards.iter()
+                .filter(|&&c| !jacks_are_jokers || c != 12)
                 .counts()
                 .into_values()
                 .sorted_by(|a, b| b.cmp(a))
                 .collect();
-            // println!("cards {}, groups {:?}", self.cards, groups);
             (*groups.first().unwrap() + jokers) * 2 + *(groups.get(1).unwrap_or(&0))
         };
-        // println!("cards: {}, jokers: {}, hand_type: {}", self.cards, jokers, hand_type_strength);
-        self.cards.chars().fold(hand_type_strength, |acc, card| {
-            (acc << 4) + "ĵ23456789TJQKA".find(card).unwrap()
+        let value = |c: u8| -> usize {
+            if jacks_are_jokers && c == 12 { 0 } else { c as usize }
+        };
+        self.cards.iter().fold(hand_type_strength, |acc, &card| {
+            (acc << 4) + value(card)
         })
     }
 }
 
-fn solve<F>(input: &str, swap_jokers: F) -> usize
-    where F: Fn(&str) -> String
-{
-    input.lines().filter_map(|line| {
-        let (cards, bid) = line.split_once(' ')?;
-        let cards = swap_jokers(cards);
-        let hand = Hand {
-            cards,
-            bid: bid.parse::<usize>().ok()?,
-        };
-        Some(hand)
-    }).sorted_by_cached_key(|hand| hand.hand_strength())
-        .enumerate()
-        .map(|(index, hand)| (index + 1) * hand.bid)
-        .sum()
+fn solve(input: Vec<Hand>, jacks_are_jokers: bool) -> usize {
+    input
+        .iter()
+        .sorted_by_cached_key(|hand| hand.hand_strength(jacks_are_jokers))
+            .enumerate()
+            .map(|(index, hand)| (index + 1) * hand.bid)
+            .sum()
 }
 
 
-fn part1(input: &str) -> usize {
-    let swap_jokers = |cards: &str| -> String { cards.to_string() };
-    solve(input, swap_jokers)
+fn part1(input: Vec<Hand>) -> usize {
+    solve(input, false)
 }
 
-fn part2(input: &str) -> usize {
-    let swap_jokers = |cards: &str| -> String {
-        cards.replace('J', "ĵ")
-    };
-    solve(input, swap_jokers)
+fn part2(input: Vec<Hand>) -> usize {
+    solve(input, true)
 }
 
 fn main() {
@@ -86,6 +96,6 @@ QQQJA 483";
 #[test]
 fn default() {
     let input = default_input();
-    assert_eq!(part1(input), 253866470);
+    assert_eq!(part1(input.clone()), 253866470);
     assert_eq!(part2(input), 254494947);
 }
