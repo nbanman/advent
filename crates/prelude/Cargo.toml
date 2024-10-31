@@ -18,3 +18,4 @@ advent-ocr = { version = "0.1.2" }
 
 [lints]
 workspace = true
+

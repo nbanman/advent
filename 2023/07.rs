@@ -97,7 +97,7 @@ fn main() {
 fn example1() {
     let input = "32T3K 765
 T55J5 684
-KK677 28
+KK677 280
 KTJJT 220
 QQQJA 483";
     assert_eq!(part1(parse_input(input)), 6440);

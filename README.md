@@ -11,7 +11,7 @@ Below is his readme as of 12/1/2023. Thanks, Ross!
 My 🎅 [Advent of Code](https://adventofcode.com) solutions. Includes a runner
 and benchmarker with free Christmas trees 🎄.
 
-<img width="600" alt="image" src="https://user-images.githubusercontent.com/17109887/206856121-6a5078e3-5ebf-4973-b530-3639b30a2efa.png">
+<img WIDTH="600" alt="image" src="https://user-images.githubusercontent.com/17109887/206856121-6a5078e3-5ebf-4973-b530-3639b30a2efa.png">
 
 ## Getting started
 
@@ -107,10 +107,10 @@ solutions in this crate for an example.
 
 Run and benchmark output:
 
-<img width="382" alt="screenshot of run output"
+<img WIDTH="382" alt="screenshot of run output"
 src="https://user-images.githubusercontent.com/17109887/206855331-d5f2ee15-0245-40c8-a673-be4f89a225c4.png">
 
-<img width="380" alt="screenshot of bench output"
+<img WIDTH="380" alt="screenshot of bench output"
 src="https://user-images.githubusercontent.com/17109887/206855396-26d868b1-a9e9-414d-b655-9b979e091b4e.png">
 
 ### Features

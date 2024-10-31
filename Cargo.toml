@@ -44,6 +44,7 @@ md5 = "0.7.0"
 fancy-regex = "0.13.0"
 once_cell = "1.19.0"
 indexmap = "2.5.0"
+utilities = { path = "crates/utilities" }
 
 [features]
 json = ["advent/json"]
@@ -108,8 +109,76 @@ name = "201514"
 path = "2015/14.rs"
 
 [[bin]]
+name = "201515"
+path = "2015/15.rs"
+
+[[bin]]
+name = "201516"
+path = "2015/16.rs"
+
+[[bin]]
+name = "201517"
+path = "2015/17.rs"
+
+[[bin]]
+name = "201518"
+path = "2015/18.rs"
+
+[[bin]]
+name = "201519"
+path = "2015/19.rs"
+
+[[bin]]
+name = "201520"
+path = "2015/20.rs"
+
+[[bin]]
+name = "201522"
+path = "2015/22.rs"
+
+[[bin]]
+name = "201601"
+path = "2016/01.rs"
+
+[[bin]]
+name = "201602"
+path = "2016/02.rs"
+
+[[bin]]
+name = "201603"
+path = "2016/03.rs"
+
+[[bin]]
+name = "201604"
+path = "2016/04.rs"
+
+[[bin]]
+name = "201605"
+path = "2016/05.rs"
+
+[[bin]]
+name = "201606"
+path = "2016/06.rs"
+
+[[bin]]
+name = "201607"
+path = "2016/07.rs"
+
+[[bin]]
 name = "201608"
 path = "2016/08.rs"
+
+[[bin]]
+name = "201609"
+path = "2016/09.rs"
+
+[[bin]]
+name = "201610"
+path = "2016/10.rs"
+
+[[bin]]
+name = "201611"
+path = "2016/11.rs"
 
 [[bin]]
 name = "201701"
