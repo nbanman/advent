@@ -15,6 +15,8 @@ pub use vectrix::{Matrix, vector, Vector};
 
 pub use then::Some as _;
 
+pub use advent_ocr::ocr;
+
 pub type Vector2 = vectrix::Vector<i64, 2>;
 pub type Vector3 = vectrix::Vector<i64, 3>;
 pub type Vector4 = vectrix::Vector<i64, 4>;

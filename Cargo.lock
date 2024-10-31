@@ -43,6 +43,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "advent-ocr"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a78c951c56ea026f275da1f1dc775d0a318fad56b8b1ac0ebbd6cc5f149d5b05"
+
+[[package]]
 name = "ahash"
 version = "0.8.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -373,10 +379,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ocr"
-version = "0.1.0"
-
-[[package]]
 name = "once_cell"
 version = "1.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -449,6 +451,7 @@ checksum = "eb9f9e6e233e5c4a35559a617bf40a4ec447db2e84c20b55a6f83167b7e57872"
 name = "prelude"
 version = "0.0.0"
 dependencies = [
+ "advent-ocr",
  "ahash",
  "either",
  "itermore",

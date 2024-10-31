@@ -14,6 +14,7 @@ vectrix = { workspace = true }
 pathfinding = { workspace = true }
 
 then = { version = "0.1.0", path = "../then" }
+advent-ocr = { version = "0.1.2" }
 
 [lints]
 workspace = true

@@ -51,19 +51,8 @@ fn part1(screen: [bool; 300]) -> usize {
 }
 
 fn part2(screen: [bool; 300]) -> String {
-    for y in 0..HEIGHT {
-        for x in 0..WIDTH {
-            print!("{}",
-                 if screen[y * WIDTH + x] {
-                    "*"
-                } else {
-                    " "
-                }
-            )
-        }
-        println!();
-    }
-    "AFBUPZBJPS".to_string()
+    let screen: Vec<bool> = screen.to_vec();
+    ocr((&screen, WIDTH)).unwrap()
 }
 
 fn main() {
