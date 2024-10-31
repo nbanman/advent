@@ -1,5 +1,6 @@
 use advent::prelude::*;
 
+
 fn parse_input(input: &str) -> Vec<[Vec<&str>; 2]> {
     input
         .lines()
@@ -17,6 +18,7 @@ fn default_input() -> Vec<[Vec<&'static str>; 2]> {
 }
 
 fn abba(s: &str) -> bool {
+
     s.chars()
         .tuple_windows()
         .any(|(a, b, c, d)| a == d && b == c && a != b)

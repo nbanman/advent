@@ -17,3 +17,4 @@ then = { version = "0.1.0", path = "../then" }
 
 [lints]
 workspace = true
+
