@@ -24,7 +24,7 @@ fn part1((mut a, mut b): (Vec<usize>, Vec<usize>)) -> usize {
 
 fn part2((a, b): (Vec<usize>, Vec<usize>)) -> usize {
     let mut freq = HashMap::new();
-    for n in b.iter() {
+    for n in b {
         freq.entry(n)
             .and_modify(|count| { *count += 1 })
             .or_insert(1);
